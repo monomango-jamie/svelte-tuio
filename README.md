@@ -135,34 +135,47 @@ Hook to access TUIOHandler from context.
 const tuioHandler = useTUIO();
 ```
 
-## Finger Touch Simulation
+## Custom Event Callbacks
 
-When finger touch end events are detected (2Dcur profile), the library can automatically simulate clicks on HTML elements at the touch position.
+The library provides optional callbacks for all TUIO events. By default:
 
-**Default Behavior:**
+- **`handleFingerTouchEnd`** - Uses [`defaultSimulateClick`](https://github.com/monomango-jamie/svelte-tuio/blob/main/src/lib/tuio-provider/defaultSimulateClick.ts) to click HTML elements
+- **`handleFingerTouchStart`** - Does nothing (no-op)
+- **`handlePlaceTangible`** - Automatic (managed by TangiblesManager)
+- **`handleRemoveTangible`** - Automatic (managed by TangiblesManager)
+- **`handleMoveTangible`** - Automatic (managed by TangiblesManager)
 
-- Converts normalized TUIO coordinates (u, v) to screen pixels
-- Finds the HTML element at that position using `document.elementFromPoint()`
-- Triggers a click event on that element
+**Custom Callbacks:**
 
-**Custom Callback:**
-
-You can provide your own click handler when creating the `TUIOHandler`:
+You can provide custom callbacks for any TUIO event:
 
 ```svelte
 <script>
 	import { TUIOProvider, TUIOHandler } from 'svelte-tuio';
 	import { setTUIOHandler } from 'svelte-tuio';
+	import type { TUIOHandlerCallbacks } from 'svelte-tuio';
 
 	const socket = new WebSocket('ws://localhost:8080');
 
-	// Custom click handler
-	function myCustomClickHandler(u: number, v: number) {
-		console.log(`Touch at normalized coordinates: ${u}, ${v}`);
-		// Your custom logic here
-	}
+	const callbacks: TUIOHandlerCallbacks = {
+		handleFingerTouchEnd: (u, v) => {
+			console.log(`Finger touch end at: ${u}, ${v}`);
+		},
+		handleFingerTouchStart: (u, v) => {
+			console.log(`Finger touch start at: ${u}, ${v}`);
+		},
+		handlePlaceTangible: (touch) => {
+			console.log(`Tangible ${touch.classId} placed`);
+		},
+		handleRemoveTangible: (touch) => {
+			console.log(`Tangible ${touch.classId} removed`);
+		},
+		handleMoveTangible: (touch) => {
+			console.log(`Tangible ${touch.classId} moved to ${touch.u}, ${touch.v}`);
+		}
+	};
 
-	const tuioHandler = new TUIOHandler(socket, myCustomClickHandler);
+	const tuioHandler = new TUIOHandler(socket, callbacks);
 	setTUIOHandler(tuioHandler);
 </script>
 
@@ -170,6 +183,8 @@ You can provide your own click handler when creating the `TUIOHandler`:
 	<!-- Your app -->
 </TUIOProvider>
 ```
+
+> **Note:** Custom tangible callbacks are called _in addition to_ the automatic TangiblesManager updates, allowing you to add extra functionality without losing the built-in state management.
 
 ## TypeScript Support
 

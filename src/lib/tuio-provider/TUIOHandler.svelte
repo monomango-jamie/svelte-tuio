@@ -27,6 +27,14 @@
 		onTouchEnd?: TouchEventListener;
 	}
 
+	export interface TUIOHandlerCallbacks {
+		handleFingerTouchEnd?: (u: number, v: number) => void;
+		handleFingerTouchStart?: (u: number, v: number) => void;
+		handlePlaceTangible?: (touch: TUIOTouch) => void;
+		handleRemoveTangible?: (touch: TUIOTouch) => void;
+		handleMoveTangible?: (touch: TUIOTouch) => void;
+	}
+
 	/**
 	 * Manages WebSocket connections for TUIO (Tangible User Interface Objects) events.
 	 * Handles touch start, end, and move events from a TUIO-compatible server.
@@ -35,7 +43,11 @@
 		private socket: WebSocket;
 		public touchZones = $state<TouchZone[]>([]);
 		public tangiblesManager: TangiblesManager;
-		private simulateClick: (u: number, v: number) => void;
+		private onFingerTouchEnd: (u: number, v: number) => void;
+		private onFingerTouchStart: (u: number, v: number) => void;
+		private onPlaceTangible?: (touch: TUIOTouch) => void;
+		private onRemoveTangible?: (touch: TUIOTouch) => void;
+		private onMoveTangible?: (touch: TUIOTouch) => void;
 
 		/**
 		 * Creates a new TUIOHandler instance with an existing WebSocket connection.
@@ -43,12 +55,16 @@
 		 * Automatically handles TUIO touch events by parsing incoming JSON data.
 		 *
 		 * @param {WebSocket} socket - The WebSocket instance to use for TUIO events
-		 * @param {function} simulateClick - Optional function to simulate clicks at coordinates
+		 * @param {TUIOHandlerCallbacks} callbacks - Optional callbacks for TUIO events
 		 */
-		constructor(socket: WebSocket, handleFingerTouchEnd?: (u: number, v: number) => void) {
+		constructor(socket: WebSocket, callbacks?: TUIOHandlerCallbacks) {
 			this.tangiblesManager = new TangiblesManager();
 			this.socket = socket;
-			this.simulateClick = handleFingerTouchEnd || defaultSimulateClick;
+			this.onFingerTouchEnd = callbacks?.handleFingerTouchEnd || defaultSimulateClick;
+			this.onFingerTouchStart = callbacks?.handleFingerTouchStart || (() => {});
+			this.onPlaceTangible = callbacks?.handlePlaceTangible;
+			this.onRemoveTangible = callbacks?.handleRemoveTangible;
+			this.onMoveTangible = callbacks?.handleMoveTangible;
 			this.addSocketEventListeners();
 		}
 
@@ -67,6 +83,8 @@
 					data.touchesStart.forEach((touch: TUIOTouch) => {
 						if (touch.profile === '2Dobj') {
 							this.handlePlaceTangible(touch);
+						} else if (touch.profile === '2Dcur') {
+							this.handleFingerTouchStart(touch);
 						}
 					});
 				}
@@ -75,13 +93,7 @@
 					data.touchesEnd.forEach((touch: TUIOTouch) => {
 						if (touch.profile === '2Dobj') {
 							this.handleRemoveTangible(touch);
-						}
-					});
-				}
-
-				if (data.touchesEnd && data.touchesEnd.length > 0) {
-					data.touchesEnd.forEach((touch: TUIOTouch) => {
-						if (touch.profile === '2Dcur') {
+						} else if (touch.profile === '2Dcur') {
 							this.handleFingerTouchEnd(touch);
 						}
 					});
@@ -119,52 +131,67 @@
 		}
 
 		/**
+		 * Handles finger touch start events from TUIO data (2Dcur profile).
+		 * Calls the custom callback if provided, otherwise does nothing by default.
+		 *
+		 * @param {TUIOTouch} touch - The touch event data containing position coordinates
+		 */
+		public handleFingerTouchStart(touch: TUIOTouch): void {
+			this.onFingerTouchStart(touch.u, touch.v);
+		}
+
+		/**
 		 * Handles finger touch end events from TUIO data (2Dcur profile).
-		 * Simulates a click at the touch coordinates.
+		 * Simulates a click at the touch coordinates by default.
 		 *
 		 * @param {TUIOTouch} touch - The touch event data containing position coordinates
 		 */
 		public handleFingerTouchEnd(touch: TUIOTouch): void {
-			// Check for zone-specific touches
-			this.simulateClick(touch.u, touch.v);
+			this.onFingerTouchEnd(touch.u, touch.v);
 		}
 
 		/**
 		 * Handles tangible placement events from TUIO data (2Dobj profile).
-		 * Adds the tangible to the tangibles manager.
+		 * Adds the tangible to the tangibles manager and calls custom callback if provided.
 		 *
 		 * @param {TUIOTouch} touch - The touch event data for the placed tangible
 		 */
 		public handlePlaceTangible(touch: TUIOTouch): void {
 			if (this.tangiblesManager) {
 				this.tangiblesManager.addTangible(touch);
-				return;
+			}
+			if (this.onPlaceTangible) {
+				this.onPlaceTangible(touch);
 			}
 		}
 
 		/**
 		 * Handles tangible removal events from TUIO data (2Dobj profile).
-		 * Removes the tangible from the tangibles manager.
+		 * Removes the tangible from the tangibles manager and calls custom callback if provided.
 		 *
 		 * @param {TUIOTouch} touch - The touch event data for the removed tangible
 		 */
 		public handleRemoveTangible(touch: TUIOTouch): void {
 			if (this.tangiblesManager) {
 				this.tangiblesManager.removeTangible(touch.classId);
-				return;
+			}
+			if (this.onRemoveTangible) {
+				this.onRemoveTangible(touch);
 			}
 		}
 
 		/**
 		 * Handles tangible movement events from TUIO data (2Dobj profile).
-		 * Updates the tangible's position and rotation in the tangibles manager.
+		 * Updates the tangible's position and rotation in the tangibles manager and calls custom callback if provided.
 		 *
 		 * @param {TUIOTouch} touch - The touch event data for the moved tangible
 		 */
 		public handleMoveTangible(touch: TUIOTouch): void {
 			if (this.tangiblesManager) {
 				this.tangiblesManager.updateTangible(touch);
-				return;
+			}
+			if (this.onMoveTangible) {
+				this.onMoveTangible(touch);
 			}
 		}
 
