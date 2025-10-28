@@ -1,181 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { TUIOSocket, type TouchZone } from './TUIOSocket.svelte';
-import type { TUIOEvent, TUIOTouch } from '../types/TUIO';
-import type { TangiblesManager } from '$lib/providers/tangibles/TangiblesManager.svelte';
+import { TUIOHandler, type TouchZone } from './TUIOHandler.svelte';
+import type { TUIOEvent, TUIOTouch } from '$lib/types/TUIO';
 
 // Mock browser environment
 vi.mock('$app/environment', () => ({
 	browser: true
-}));
-
-// Mock possibleTangibles with correct structure
-vi.mock('$lib/types/tangible', () => ({
-	possibleTangibles: [
-		{
-			id: 13,
-			classId: 13,
-			profile: '2Dobj',
-			guiInfo: {
-				iconName: 'tangible-solar-panel',
-				type: 'Erzeuger',
-				label: 'Solar Panel',
-				color: 'green',
-				flows: [
-					{ target: 19, color: 'yellow', amount: 0, unit: 'kWh' },
-					{ target: 17, color: 'yellow', amount: 0, unit: 'kWh' },
-					{ target: 16, color: 'yellow', amount: 0, unit: 'kWh' }
-				],
-				totalEnergyConsumed: { amount: 0, unit: 'kWh' },
-				totalEnergyOutput: { amount: 0, unit: 'kWh' },
-				maxOutputAmount: 300000,
-				maxConsumptionAmount: 0,
-				minimumIntegerDigits: 6
-			}
-		},
-		{
-			id: 14,
-			classId: 14,
-			profile: '2Dobj',
-			guiInfo: {
-				iconName: 'tangible-factory',
-				type: 'Verbraucher',
-				label: 'Industrieverbrauch',
-				color: 'blue',
-				flows: [],
-				totalEnergyConsumed: { amount: 0, unit: 'kWh' },
-				totalEnergyOutput: { amount: 0, unit: 'kWh' },
-				maxOutputAmount: 0,
-				maxConsumptionAmount: 100000,
-				minimumIntegerDigits: 6
-			}
-		},
-		{
-			id: 15,
-			classId: 15,
-			profile: '2Dobj',
-			guiInfo: {
-				iconName: 'tangible-house',
-				type: 'Verbraucher',
-				label: 'Hausverbrauch',
-				color: 'green',
-				flows: [],
-				totalEnergyConsumed: { amount: 0, unit: 'kWh' },
-				totalEnergyOutput: { amount: 0, unit: 'kWh' },
-				maxOutputAmount: 0,
-				maxConsumptionAmount: 6000,
-				minimumIntegerDigits: 4
-			}
-		},
-		{
-			id: 16,
-			classId: 16,
-			profile: '2Dobj',
-			guiInfo: {
-				iconName: 'tangible-h2-tank',
-				type: 'Speicher',
-				label: 'H2 Produktion',
-				color: 'blue',
-				flows: [
-					{ target: 17, color: 'yellow', amount: 0, unit: 'kWh' },
-					{ target: 20, color: 'blue', amount: 0, unit: 'KG' }
-				],
-				totalEnergyConsumed: { amount: 0, unit: 'KG' },
-				totalEnergyOutput: { amount: 0, unit: 'KG' },
-				maxOutputAmount: 100000,
-				maxConsumptionAmount: 100000,
-				minimumIntegerDigits: 6
-			}
-		},
-		{
-			id: 17,
-			classId: 17,
-			profile: '2Dobj',
-			guiInfo: {
-				iconName: 'tangible-stromnetz',
-				type: 'Stromnetz',
-				label: '',
-				color: 'red',
-				flows: [
-					{ target: 19, color: 'yellow', amount: 0, unit: 'kWh' },
-					{ target: 14, color: 'yellow', amount: 0, unit: 'kWh' },
-					{ target: 15, color: 'yellow', amount: 0, unit: 'kWh' }
-				],
-				totalEnergyConsumed: { amount: 0, unit: 'kWh' },
-				totalEnergyOutput: { amount: 0, unit: 'kWh' },
-				maxOutputAmount: 270000,
-				maxConsumptionAmount: 400000,
-				minimumIntegerDigits: 6
-			}
-		},
-		{
-			id: 19,
-			classId: 19,
-			profile: '2Dobj',
-			guiInfo: {
-				iconName: 'tangible-battery',
-				type: 'Speicher',
-				label: 'Energie-Speicher',
-				color: 'green',
-				flows: [{ target: 17, color: 'yellow', amount: 0, unit: 'kWh' }],
-				totalEnergyConsumed: { amount: 0, unit: 'kWh' },
-				totalEnergyOutput: { amount: 0, unit: 'kWh' },
-				maxOutputAmount: 50000,
-				maxConsumptionAmount: 50000,
-				minimumIntegerDigits: 6
-			}
-		},
-		{
-			id: 20,
-			classId: 20,
-			profile: '2Dobj',
-			guiInfo: {
-				iconName: 'tangible-h2-bus',
-				type: 'Verbraucher',
-				label: 'Wasserstoff-Bus',
-				color: 'blue',
-				flows: [],
-				totalEnergyConsumed: { amount: 0, unit: 'KG' },
-				totalEnergyOutput: { amount: 0, unit: 'KG' },
-				maxOutputAmount: 0,
-				maxConsumptionAmount: 500,
-				minimumIntegerDigits: 3
-			}
-		},
-		{
-			id: 21,
-			classId: 21,
-			profile: '2Dobj',
-			guiInfo: {
-				iconName: 'tangible-turbine',
-				type: 'Erzeuger',
-				label: 'Windrad',
-				color: 'green',
-				flows: [
-					{ target: 19, color: 'yellow', amount: 0, unit: 'kWh' },
-					{ target: 17, color: 'yellow', amount: 0, unit: 'kWh' },
-					{ target: 16, color: 'yellow', amount: 0, unit: 'kWh' }
-				],
-				totalEnergyConsumed: { amount: 0, unit: 'kWh' },
-				totalEnergyOutput: { amount: 0, unit: 'kWh' },
-				maxOutputAmount: 100000,
-				maxConsumptionAmount: 0,
-				minimumIntegerDigits: 6
-			}
-		}
-	],
-	TangibleByClassId: {
-		CAR_CHARGER: 4,
-		SOLAR_PANEL: 13,
-		FACTORY: 14,
-		HOUSE: 15,
-		H2_TANK: 16,
-		STROMNETZ: 17,
-		BATTERY: 19,
-		H2_BUS: 20,
-		TURBINE: 21
-	}
 }));
 
 // Mock WebSocket
@@ -265,7 +95,7 @@ function createMockTUIOTouch(overrides: Partial<TUIOTouch> = {}): TUIOTouch {
 }
 
 // Mock TangiblesManager
-const mockTangiblesManager: TangiblesManager = {
+const mockTangiblesManager = {
 	addTangible: vi.fn(),
 	removeTangible: vi.fn(),
 	updateTangible: vi.fn(),
@@ -273,93 +103,82 @@ const mockTangiblesManager: TangiblesManager = {
 	clear: vi.fn()
 } as any;
 
-describe('TUIOSocket', () => {
-	let tuioSocket: TUIOSocket;
+describe('TUIOHandler', () => {
+	let tuioHandler: TUIOHandler;
 	let mockSimulateClick: ReturnType<typeof vi.fn>;
-	const testUrl = 'ws://localhost:8080';
+	let mockSocket: WebSocket;
 
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mockSimulateClick = vi.fn();
+		mockSocket = new WebSocket('ws://localhost:8080') as WebSocket;
 	});
 
 	afterEach(() => {
-		if (tuioSocket) {
-			tuioSocket.removeSocket();
+		if (tuioHandler) {
+			tuioHandler.removeSocket();
 		}
 	});
 
 	describe('Constructor and Connection', () => {
-		it('should initialize with URL and create socket in browser environment', () => {
-			tuioSocket = new TUIOSocket(testUrl);
+		it('should initialize with WebSocket and create handler in browser environment', () => {
+			tuioHandler = new TUIOHandler(mockSocket);
 
-			expect(tuioSocket).toBeDefined();
-			expect(tuioSocket.getSocket()).toBeDefined();
+			expect(tuioHandler).toBeDefined();
+			expect(tuioHandler.getSocket()).toBeDefined();
 		});
 
 		it('should initialize with simulateClick function', () => {
-			tuioSocket = new TUIOSocket(testUrl, mockSimulateClick);
+			tuioHandler = new TUIOHandler(mockSocket, mockSimulateClick);
 
-			expect(tuioSocket).toBeDefined();
-			expect(tuioSocket.getSocket()).toBeDefined();
+			expect(tuioHandler).toBeDefined();
+			expect(tuioHandler.getSocket()).toBeDefined();
 		});
 
 		it('should handle missing simulateClick function gracefully', () => {
-			tuioSocket = new TUIOSocket(testUrl);
+			tuioHandler = new TUIOHandler(mockSocket);
 
 			expect(() => {
-				tuioSocket.handleFingerTouchEnd(createMockTUIOTouch());
+				tuioHandler.handleFingerTouchEnd(createMockTUIOTouch());
 			}).not.toThrow();
 		});
 
-		it('should return null socket when not connected initially', () => {
-			tuioSocket = new TUIOSocket(testUrl);
+		it('should return socket when not connected initially', () => {
+			tuioHandler = new TUIOHandler(mockSocket);
 
 			// Socket starts in CONNECTING state
-			expect(tuioSocket.isConnected()).toBe(false);
+			expect(tuioHandler.isSocketConnected()).toBe(false);
 		});
 
 		it('should report connected when socket is in OPEN state', async () => {
-			tuioSocket = new TUIOSocket(testUrl);
+			tuioHandler = new TUIOHandler(mockSocket);
 
 			// Wait for mock connection to open
 			await new Promise((resolve) => setTimeout(resolve, 10));
 
-			expect(tuioSocket.isConnected()).toBe(true);
+			expect(tuioHandler.isSocketConnected()).toBe(true);
 		});
 	});
 
 	describe('Socket Management', () => {
 		beforeEach(() => {
-			tuioSocket = new TUIOSocket(testUrl);
+			tuioHandler = new TUIOHandler(mockSocket);
 		});
 
 		it('should close socket connection', async () => {
 			await new Promise((resolve) => setTimeout(resolve, 10));
-			expect(tuioSocket.isConnected()).toBe(true);
+			expect(tuioHandler.isSocketConnected()).toBe(true);
 
-			tuioSocket.removeSocket();
+			tuioHandler.removeSocket();
 
-			expect(tuioSocket.getSocket()).toBeNull();
-			expect(tuioSocket.isConnected()).toBe(false);
+			expect(tuioHandler.isSocketConnected()).toBe(false);
 		});
 
-		it('should handle closing non-existent socket gracefully', () => {
-			tuioSocket.removeSocket(); // Close once
-			tuioSocket.removeSocket(); // Close again
+		it('should handle closing socket gracefully', () => {
+			tuioHandler.removeSocket(); // Close once
+			tuioHandler.removeSocket(); // Close again
 
-			expect(tuioSocket.getSocket()).toBeNull();
-		});
-
-		it('should handle socket recreation', () => {
-			const firstSocket = tuioSocket.getSocket();
-
-			// Manually trigger socket recreation
-			tuioSocket['createSocket']();
-			const secondSocket = tuioSocket.getSocket();
-
-			expect(secondSocket).toBeDefined();
-			expect(secondSocket).not.toBe(firstSocket);
+			expect(tuioHandler.isSocketConnected()).toBe(false);
 		});
 
 		it('should handle socket connection errors', async () => {
@@ -367,7 +186,7 @@ describe('TUIOSocket', () => {
 
 			await new Promise((resolve) => setTimeout(resolve, 10));
 
-			const socket = tuioSocket.getSocket() as unknown as MockWebSocket;
+			const socket = tuioHandler.getSocket() as unknown as MockWebSocket;
 			socket.dispatchEvent({ type: 'error', error: new Error('Connection failed') });
 
 			expect(consoleSpy).toHaveBeenCalledWith('🔌 Socket error:', expect.any(Object));
@@ -377,10 +196,15 @@ describe('TUIOSocket', () => {
 
 	describe('Touch Zone Management', () => {
 		beforeEach(() => {
-			tuioSocket = new TUIOSocket(testUrl);
+			tuioHandler = new TUIOHandler(mockSocket);
 		});
 
-		it('should register a touch zone and return its ID', () => {
+		it('should have touchZones property', () => {
+			expect(tuioHandler.touchZones).toBeDefined();
+			expect(Array.isArray(tuioHandler.touchZones)).toBe(true);
+		});
+
+		it('should allow direct manipulation of touch zones', () => {
 			const zone: TouchZone = {
 				id: 'test-zone',
 				u: 0.1,
@@ -389,15 +213,13 @@ describe('TUIOSocket', () => {
 				normalisedHeight: 0.2
 			};
 
-			const zoneId = tuioSocket.registerTouchZone(zone);
+			tuioHandler.touchZones.push(zone);
 
-			expect(zoneId).toBe('test-zone');
-			const zones = tuioSocket.getTouchZones();
-			expect(zones).toHaveLength(1);
-			expect(zones[0].id).toBe('test-zone');
+			expect(tuioHandler.touchZones).toHaveLength(1);
+			expect(tuioHandler.touchZones[0].id).toBe('test-zone');
 		});
 
-		it('should register multiple touch zones', () => {
+		it('should support multiple touch zones', () => {
 			const zone1: TouchZone = {
 				id: 'zone1',
 				u: 0,
@@ -413,23 +235,26 @@ describe('TUIOSocket', () => {
 				normalisedHeight: 0.5
 			};
 
-			tuioSocket.registerTouchZone(zone1);
-			tuioSocket.registerTouchZone(zone2);
+			tuioHandler.touchZones.push(zone1);
+			tuioHandler.touchZones.push(zone2);
 
-			const zones = tuioSocket.getTouchZones();
-			expect(zones).toHaveLength(2);
-			expect(zones.map((z) => z.id)).toContain('zone1');
-			expect(zones.map((z) => z.id)).toContain('zone2');
+			expect(tuioHandler.touchZones).toHaveLength(2);
+			expect(tuioHandler.touchZones.map((z) => z.id)).toContain('zone1');
+			expect(tuioHandler.touchZones.map((z) => z.id)).toContain('zone2');
 		});
 	});
 
 	describe('TangiblesManager Integration', () => {
 		beforeEach(() => {
-			tuioSocket = new TUIOSocket(testUrl, mockSimulateClick);
+			tuioHandler = new TUIOHandler(mockSocket, mockSimulateClick);
+		});
+
+		it('should have TangiblesManager instance', () => {
+			expect(tuioHandler.tangiblesManager).toBeDefined();
 		});
 
 		it('should use TangiblesManager for tangible placement', () => {
-			tuioSocket.setTangiblesManager(mockTangiblesManager);
+			tuioHandler.tangiblesManager = mockTangiblesManager;
 
 			const touch = createMockTUIOTouch({
 				id: 1,
@@ -439,25 +264,25 @@ describe('TUIOSocket', () => {
 				v: 0.7
 			});
 
-			tuioSocket.handlePlaceTangible(touch);
+			tuioHandler.handlePlaceTangible(touch);
 
 			expect(mockTangiblesManager.addTangible).toHaveBeenCalledWith(touch);
 		});
 
 		it('should use TangiblesManager for tangible removal', () => {
-			tuioSocket.setTangiblesManager(mockTangiblesManager);
+			tuioHandler.tangiblesManager = mockTangiblesManager;
 
 			const touch = createMockTUIOTouch({
 				classId: 16
 			});
 
-			tuioSocket.handleRemoveTangible(touch);
+			tuioHandler.handleRemoveTangible(touch);
 
 			expect(mockTangiblesManager.removeTangible).toHaveBeenCalledWith(16);
 		});
 
 		it('should use TangiblesManager for tangible movement', () => {
-			tuioSocket.setTangiblesManager(mockTangiblesManager);
+			tuioHandler.tangiblesManager = mockTangiblesManager;
 
 			const touch = createMockTUIOTouch({
 				id: 2,
@@ -467,13 +292,13 @@ describe('TUIOSocket', () => {
 				v: 0.2
 			});
 
-			tuioSocket.handleMoveTangible(touch);
+			tuioHandler.handleMoveTangible(touch);
 
 			expect(mockTangiblesManager.updateTangible).toHaveBeenCalledWith(touch);
 		});
 
 		it('should call addTangible even for unknown classIds', () => {
-			tuioSocket.setTangiblesManager(mockTangiblesManager);
+			tuioHandler.tangiblesManager = mockTangiblesManager;
 
 			const touch = createMockTUIOTouch({
 				id: 1,
@@ -481,9 +306,9 @@ describe('TUIOSocket', () => {
 				profile: '2Dobj'
 			});
 
-			tuioSocket.handlePlaceTangible(touch);
+			tuioHandler.handlePlaceTangible(touch);
 
-			// TUIOSocket passes all tangible touches to TangiblesManager
+			// TUIOHandler passes all tangible touches to TangiblesManager
 			// TangiblesManager is responsible for filtering valid tangibles
 			expect(mockTangiblesManager.addTangible).toHaveBeenCalledWith(touch);
 		});
@@ -491,7 +316,7 @@ describe('TUIOSocket', () => {
 
 	describe('Finger Touch Handling', () => {
 		beforeEach(() => {
-			tuioSocket = new TUIOSocket(testUrl, mockSimulateClick);
+			tuioHandler = new TUIOHandler(mockSocket, mockSimulateClick);
 		});
 
 		it('should call simulateClick for finger touch end events', () => {
@@ -501,27 +326,27 @@ describe('TUIOSocket', () => {
 				v: 0.75
 			});
 
-			tuioSocket.handleFingerTouchEnd(fingerTouch);
+			tuioHandler.handleFingerTouchEnd(fingerTouch);
 
 			expect(mockSimulateClick).toHaveBeenCalledWith(0.25, 0.75);
 		});
 
 		it('should handle finger touch end without simulateClick function', () => {
-			const socketWithoutClick = new TUIOSocket(testUrl);
+			const handlerWithoutClick = new TUIOHandler(mockSocket);
 			const fingerTouch = createMockTUIOTouch({
 				profile: '2Dcur'
 			});
 
 			expect(() => {
-				socketWithoutClick.handleFingerTouchEnd(fingerTouch);
+				handlerWithoutClick.handleFingerTouchEnd(fingerTouch);
 			}).not.toThrow();
 		});
 	});
 
 	describe('TUIO Event Message Processing', () => {
 		beforeEach(() => {
-			tuioSocket = new TUIOSocket(testUrl, mockSimulateClick);
-			tuioSocket.setTangiblesManager(mockTangiblesManager);
+			tuioHandler = new TUIOHandler(mockSocket, mockSimulateClick);
+			tuioHandler.tangiblesManager = mockTangiblesManager;
 		});
 
 		it('should process touchesStart events for tangibles', async () => {
@@ -543,7 +368,7 @@ describe('TUIOSocket', () => {
 
 			await new Promise((resolve) => setTimeout(resolve, 10));
 
-			const socket = tuioSocket.getSocket() as unknown as MockWebSocket;
+			const socket = tuioHandler.getSocket() as unknown as MockWebSocket;
 			socket.dispatchEvent({
 				type: 'message',
 				data: JSON.stringify(tuioEvent)
@@ -568,7 +393,7 @@ describe('TUIOSocket', () => {
 
 			await new Promise((resolve) => setTimeout(resolve, 10));
 
-			const socket = tuioSocket.getSocket() as unknown as MockWebSocket;
+			const socket = tuioHandler.getSocket() as unknown as MockWebSocket;
 			socket.dispatchEvent({
 				type: 'message',
 				data: JSON.stringify(tuioEvent)
@@ -596,7 +421,7 @@ describe('TUIOSocket', () => {
 
 			await new Promise((resolve) => setTimeout(resolve, 10));
 
-			const socket = tuioSocket.getSocket() as unknown as MockWebSocket;
+			const socket = tuioHandler.getSocket() as unknown as MockWebSocket;
 			socket.dispatchEvent({
 				type: 'message',
 				data: JSON.stringify(tuioEvent)
@@ -622,7 +447,7 @@ describe('TUIOSocket', () => {
 
 			await new Promise((resolve) => setTimeout(resolve, 10));
 
-			const socket = tuioSocket.getSocket() as unknown as MockWebSocket;
+			const socket = tuioHandler.getSocket() as unknown as MockWebSocket;
 			socket.dispatchEvent({
 				type: 'message',
 				data: JSON.stringify(tuioEvent)
@@ -653,7 +478,7 @@ describe('TUIOSocket', () => {
 
 			await new Promise((resolve) => setTimeout(resolve, 10));
 
-			const socket = tuioSocket.getSocket() as unknown as MockWebSocket;
+			const socket = tuioHandler.getSocket() as unknown as MockWebSocket;
 			socket.dispatchEvent({
 				type: 'message',
 				data: JSON.stringify(tuioEvent)
@@ -673,7 +498,7 @@ describe('TUIOSocket', () => {
 
 			await new Promise((resolve) => setTimeout(resolve, 10));
 
-			const socket = tuioSocket.getSocket() as unknown as MockWebSocket;
+			const socket = tuioHandler.getSocket() as unknown as MockWebSocket;
 
 			expect(() => {
 				socket.dispatchEvent({
@@ -689,8 +514,8 @@ describe('TUIOSocket', () => {
 
 	describe('Tangible ClassId Handling', () => {
 		beforeEach(() => {
-			tuioSocket = new TUIOSocket(testUrl);
-			tuioSocket.setTangiblesManager(mockTangiblesManager);
+			tuioHandler = new TUIOHandler(mockSocket);
+			tuioHandler.tangiblesManager = mockTangiblesManager;
 		});
 
 		it('should call addTangible for all valid classIds', () => {
@@ -706,7 +531,7 @@ describe('TUIOSocket', () => {
 					v: 0.5
 				});
 
-				tuioSocket.handlePlaceTangible(touch);
+				tuioHandler.handlePlaceTangible(touch);
 
 				expect(mockTangiblesManager.addTangible).toHaveBeenCalledWith(touch);
 			});
@@ -715,7 +540,7 @@ describe('TUIOSocket', () => {
 
 	describe('Edge Cases and Error Handling', () => {
 		beforeEach(() => {
-			tuioSocket = new TUIOSocket(testUrl, mockSimulateClick);
+			tuioHandler = new TUIOHandler(mockSocket, mockSimulateClick);
 		});
 
 		it('should handle extremely large coordinate values', () => {
@@ -726,7 +551,7 @@ describe('TUIOSocket', () => {
 			});
 
 			expect(() => {
-				tuioSocket.handleFingerTouchEnd(extremeTouch);
+				tuioHandler.handleFingerTouchEnd(extremeTouch);
 			}).not.toThrow();
 
 			expect(mockSimulateClick).toHaveBeenCalledWith(999999, -999999);
@@ -739,7 +564,7 @@ describe('TUIOSocket', () => {
 				profile: '2Dcur'
 			});
 
-			tuioSocket.handleFingerTouchEnd(boundaryTouch);
+			tuioHandler.handleFingerTouchEnd(boundaryTouch);
 
 			expect(mockSimulateClick).toHaveBeenCalledWith(0, 1);
 		});
