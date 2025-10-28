@@ -64,7 +64,7 @@ npm install svelte-tuio
 
 Your TouchDesigner project needs to run a WebSocket server that sends TUIO events in the JSON format shown above.
 
-> **Note:** An example Python callbacks file for TouchDesigner is included in this package at `src/python/example_tuio_callbacks.py`
+> **Note:** An example Python callbacks file for TouchDesigner is included in this package at [`src/python/example_tuio_callbacks.py`](https://github.com/monomango-jamie/svelte-tuio/blob/main/src/python/example_tuio_callbacks.py)
 
 ### Using the Hook
 
@@ -136,45 +136,41 @@ Hook to access TUIOHandler from context.
 const tuioHandler = useTUIO();
 ```
 
-## Touch Zones
+## Finger Touch Simulation
 
-Define interactive zones with event handlers:
+When finger touch end events are detected (2Dcur profile), the library can automatically simulate clicks on HTML elements at the touch position.
+
+**Default Behavior:**
+
+- Converts normalized TUIO coordinates (u, v) to screen pixels
+- Finds the HTML element at that position using `document.elementFromPoint()`
+- Triggers a click event on that element
+
+**Custom Callback:**
+
+You can provide your own click handler when creating the `TUIOHandler`:
 
 ```svelte
 <script>
-  import { useTUIO } from 'svelte-tuio';
+  import { TUIOProvider, TUIOHandler } from 'svelte-tuio';
+  import { setTUIOHandler } from 'svelte-tuio';
 
-  const tuioHandler = useTUIO();
-
-  // Add a touch zone
-  tuioHandler.touchZones.push({
-    id: 'zone-1',
-    u: 0.1,
-    v: 0.1,
-    normalisedWidth: 0.5,
-    normalisedHeight: 0.5,
-    onPlaceTangible: (touch) => console.log('Placed:', touch),
-    onRemoveTangible: (touch) => console.log('Removed:', touch),
-    onMoveTangible: (touch) => console.log('Moved:', touch)
-  });
+  const socket = new WebSocket('ws://localhost:8080');
+  
+  // Custom click handler
+  function myCustomClickHandler(u: number, v: number) {
+    console.log(`Touch at normalized coordinates: ${u}, ${v}`);
+    // Your custom logic here
+  }
+  
+  const tuioHandler = new TUIOHandler(socket, myCustomClickHandler);
+  setTUIOHandler(tuioHandler);
 </script>
 
-<div>
-  Active zones: {tuioHandler.touchZones.length}
-</div>
+<TUIOProvider {socket}>
+  <!-- Your app -->
+</TUIOProvider>
 ```
-
-## Events
-
-The library handles TUIO protocol events:
-
-- **2Dobj** - Tangible objects (fiducial markers)
-  - `touchesStart` → `handlePlaceTangible()`
-  - `touchesMove` → `handleMoveTangible()`
-  - `touchesEnd` → `handleRemoveTangible()`
-
-- **2Dcur** - Finger/cursor touches
-  - `touchesEnd` → `handleFingerTouchEnd()`
 
 ## TypeScript Support
 

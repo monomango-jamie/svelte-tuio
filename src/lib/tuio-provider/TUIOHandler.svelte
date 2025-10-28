@@ -1,6 +1,7 @@
 <script lang="ts" module>
 	import type { TUIOEvent, TUIOTouch } from '$lib/types/TUIO';
 	import { TangiblesManager } from '$lib/tangible-manager/TangiblesManager.svelte';
+	import defaultSimulateClick from '$lib/tuio-provider/defaultSimulateClick';
 
 	type TouchEventListener = (touch: TUIOTouch) => void;
 
@@ -44,10 +45,10 @@
 		 * @param {WebSocket} socket - The WebSocket instance to use for TUIO events
 		 * @param {function} simulateClick - Optional function to simulate clicks at coordinates
 		 */
-		constructor(socket: WebSocket, simulateClick?: (u: number, v: number) => void) {
+		constructor(socket: WebSocket, handleFingerTouchEnd?: (u: number, v: number) => void) {
 			this.tangiblesManager = new TangiblesManager();
 			this.socket = socket;
-			this.simulateClick = simulateClick || (() => {});
+			this.simulateClick = handleFingerTouchEnd || defaultSimulateClick;
 			this.addSocketEventListeners();
 		}
 
