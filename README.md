@@ -13,7 +13,7 @@ A Svelte 5 library for handling TUIO (Tangible User Interface Objects) protocol 
 
 ## Overview
 
-This library is designed to receive TUIO messages from a **TUIO server** (such as TouchDesigner) and make them available in your Svelte web frontend. 
+This library is designed to receive TUIO messages from a **TUIO server** (such as TouchDesigner) and make them available in your Svelte web frontend.
 
 ### How It Works
 
@@ -48,15 +48,15 @@ npm install svelte-tuio
 
 ```svelte
 <script>
-  import { TUIOProvider } from 'svelte-tuio';
+	import { TUIOProvider } from 'svelte-tuio';
 
-  // Create WebSocket connection to your TUIO server
-  // Replace with your TouchDesigner WebSocket server address
-  const socket = new WebSocket('ws://localhost:8080');
+	// Create WebSocket connection to your TUIO server
+	// Replace with your TouchDesigner WebSocket server address
+	const socket = new WebSocket('ws://localhost:8080');
 </script>
 
 <TUIOProvider {socket}>
-  <!-- Your app components can now access TUIO data via useTUIO() -->
+	<!-- Your app components can now access TUIO data via useTUIO() -->
 </TUIOProvider>
 ```
 
@@ -70,22 +70,22 @@ Your TouchDesigner project needs to run a WebSocket server that sends TUIO event
 
 ```svelte
 <script>
-  import { useTUIO } from 'svelte-tuio';
+	import { useTUIO } from 'svelte-tuio';
 
-  const tuioHandler = useTUIO();
-  
-  // State is already reactive via Svelte 5 runes ($state)
-  // No need for $: reactive statements!
+	const tuioHandler = useTUIO();
+
+	// State is already reactive via Svelte 5 runes ($state)
+	// No need for $: reactive statements!
 </script>
 
 <div>
-  <p>Connected: {tuioHandler.isSocketConnected()}</p>
-  
-  {#each tuioHandler.tangiblesManager.tangibles as tangible}
-    <div>
-      Tangible {tangible.classId} at ({tangible.u}, {tangible.v})
-    </div>
-  {/each}
+	<p>Connected: {tuioHandler.isSocketConnected()}</p>
+
+	{#each tuioHandler.tangiblesManager.tangibles as tangible}
+		<div>
+			Tangible {tangible.classId} at ({tangible.u}, {tangible.v})
+		</div>
+	{/each}
 </div>
 ```
 
@@ -93,7 +93,7 @@ Your TouchDesigner project needs to run a WebSocket server that sends TUIO event
 
 ```svelte
 <script>
-  import { TangiblesDebugger } from 'svelte-tuio';
+	import { TangiblesDebugger } from 'svelte-tuio';
 </script>
 
 <TangiblesDebugger />
@@ -124,8 +124,8 @@ Manages tangible objects with reactive state. All tangible operations are handle
 
 ```typescript
 // Public Properties (read-only)
-manager.tangibles          // TUIOTouch[] ($state) - All active tangibles
-manager.tangibleClassIds   // number[] ($state) - Just the class IDs
+manager.tangibles; // TUIOTouch[] ($state) - All active tangibles
+manager.tangibleClassIds; // number[] ($state) - Just the class IDs
 ```
 
 ### `useTUIO()`
@@ -152,23 +152,23 @@ You can provide your own click handler when creating the `TUIOHandler`:
 
 ```svelte
 <script>
-  import { TUIOProvider, TUIOHandler } from 'svelte-tuio';
-  import { setTUIOHandler } from 'svelte-tuio';
+	import { TUIOProvider, TUIOHandler } from 'svelte-tuio';
+	import { setTUIOHandler } from 'svelte-tuio';
 
-  const socket = new WebSocket('ws://localhost:8080');
-  
-  // Custom click handler
-  function myCustomClickHandler(u: number, v: number) {
-    console.log(`Touch at normalized coordinates: ${u}, ${v}`);
-    // Your custom logic here
-  }
-  
-  const tuioHandler = new TUIOHandler(socket, myCustomClickHandler);
-  setTUIOHandler(tuioHandler);
+	const socket = new WebSocket('ws://localhost:8080');
+
+	// Custom click handler
+	function myCustomClickHandler(u: number, v: number) {
+		console.log(`Touch at normalized coordinates: ${u}, ${v}`);
+		// Your custom logic here
+	}
+
+	const tuioHandler = new TUIOHandler(socket, myCustomClickHandler);
+	setTUIOHandler(tuioHandler);
 </script>
 
 <TUIOProvider {socket}>
-  <!-- Your app -->
+	<!-- Your app -->
 </TUIOProvider>
 ```
 

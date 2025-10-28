@@ -60,7 +60,6 @@
 		 * @private
 		 */
 		private addSocketEventListeners(): void {
-
 			this.socket.addEventListener('message', (event) => {
 				const data: TUIOEvent = JSON.parse(event.data);
 
