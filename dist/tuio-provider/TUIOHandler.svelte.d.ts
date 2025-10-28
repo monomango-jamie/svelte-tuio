@@ -30,7 +30,7 @@ export declare class TUIOHandler {
      * @param {WebSocket} socket - The WebSocket instance to use for TUIO events
      * @param {function} simulateClick - Optional function to simulate clicks at coordinates
      */
-    constructor(socket: WebSocket, simulateClick?: (u: number, v: number) => void);
+    constructor(socket: WebSocket, handleFingerTouchEnd?: (u: number, v: number) => void);
     /**
      * Attaches event listeners to the existing WebSocket connection.
      * Sets up handlers for messages, connection status, and errors.
