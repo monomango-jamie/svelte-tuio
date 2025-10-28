@@ -77,9 +77,7 @@
 			}
 			// Otherwise, update the tangible's position
 			this.tangibles = this.tangibles.map((tangible) =>
-				tangible.classId === touch.classId
-					? { ...tangible, ...touch }
-					: tangible
+				tangible.classId === touch.classId ? { ...tangible, ...touch } : tangible
 			);
 		}
 	}

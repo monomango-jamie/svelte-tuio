@@ -1,6 +1,4 @@
 import type { TUIOTouch } from '$lib/types/TUIO';
-import type { Tangible } from '../types/tangible';
-import { possibleTangibles, type TangibleGuiInfo } from '../types/tangible';
 
 /**
  * Factory class for creating reactive Tangible instances.
@@ -10,16 +8,11 @@ import { possibleTangibles, type TangibleGuiInfo } from '../types/tangible';
  */
 export class TangibleFactory {
 	/**
-	 * Create a new reactive Tangible instance.
+	 * Create a new reactive TUIOTouch instance.
 	 *
-	 * @param classId - The class ID of the tangible to create.
-	 * @param u - The initial X coordinate (normalized, 0-1).
-	 * @param v - The initial Y coordinate (normalized, 0-1).
-	 * @returns A new Tangible instance with reactive state.
-	 * @throws {Error} If the classId does not correspond to a known tangible.
+	 * @param touch - The TUIO tangible to create.
 	 */
 	static create(touch: TUIOTouch): TUIOTouch {
-		
 		// Create reactive state properties
 		return $state<TUIOTouch>({
 			...touch
