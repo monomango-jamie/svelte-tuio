@@ -11,6 +11,6 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-<TUIOProvider socket={socket}>
-{@render children?.()}
+<TUIOProvider {socket}>
+	{@render children?.()}
 </TUIOProvider>

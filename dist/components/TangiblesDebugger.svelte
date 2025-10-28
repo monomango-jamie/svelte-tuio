@@ -1,5 +1,5 @@
 <script lang="ts">
-	import useTUIO from '$lib/tuio-provider/useTUIO';
+	import useTUIO from '../tuio-provider/useTUIO';
 	const tuioHandler = useTUIO();
 </script>
 

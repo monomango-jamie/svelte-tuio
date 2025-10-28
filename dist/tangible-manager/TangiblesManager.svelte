@@ -1,5 +1,5 @@
 <script lang="ts" module>
-	import { type TUIOTouch } from '$lib/types/TUIO';
+	import { type TUIOTouch } from '../types/TUIO';
 	/**
 	 * Manages tangibles in the UI.
 	 * Tangibles are objects that are placed at screen co-ordinates and prompt UI responses.

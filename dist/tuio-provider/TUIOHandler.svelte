@@ -1,6 +1,6 @@
 <script lang="ts" module>
-	import type { TUIOEvent, TUIOTouch } from '$lib/types/TUIO';
-	import { TangiblesManager } from '$lib/tangible-manager/TangiblesManager.svelte';
+	import type { TUIOEvent, TUIOTouch } from '../types/TUIO';
+	import { TangiblesManager } from '../tangible-manager/TangiblesManager.svelte';
 
 	type TouchEventListener = (touch: TUIOTouch) => void;
 
