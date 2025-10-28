@@ -4,12 +4,11 @@ A Svelte 5 library for handling TUIO (Tangible User Interface Objects) protocol 
 
 ## Features
 
-- 🎯 **WebSocket-based TUIO Handler** - Manages TUIO protocol events (2Dobj, 2Dcur profiles)
-- 🔄 **Reactive State** - Built with Svelte 5 runes for automatic reactivity
-- 📦 **Tangibles Manager** - Track and manage multiple tangible objects with positions and rotations
-- 🎨 **Debug Component** - Visual debugger with real-time updates (Tailwind CSS)
-- 🪝 **Simple Hook API** - Easy context-based access via `useTUIO()`
-- 🎛️ **Touch Zones** - Define interactive zones with event handlers
+- 🎯 **WebSocket-based TUIO Handler** - Manages TUIO protocol events.
+- 🔄 **Reactive State** - Built with Svelte 5 runes for automatic reactivity.
+- 📦 **Tangibles Manager** - Track and manage multiple tangible objects with positions and rotations.
+- 🎨 **Debug Component** - Visual debugger with real-time updates.
+- 🪝 **Simple Hook API** - Easy context-based access via `useTUIO()`.
 
 ## Overview
 
