@@ -4,7 +4,7 @@ import type { TUIOHandler } from './TUIOHandler.svelte';
 /**
  * The context key used to store and retrieve the TUIOHandler instance
  */
-export const TUIO_SOCKET_CONTEXT_KEY = 'monomango:TUIOHandler';
+export const TUIO_HANDLER_CONTEXT_KEY = 'monomango:TUIOHandler';
 
 /**
  * Sets the TUIOHandler instance in Svelte's context
@@ -12,8 +12,8 @@ export const TUIO_SOCKET_CONTEXT_KEY = 'monomango:TUIOHandler';
  * @param {TUIOHandler} socket - The TUIOHandler instance to store in context
  * @returns {void}
  */
-export function setSocket(socket: TUIOHandler) {
-	setContext(TUIO_SOCKET_CONTEXT_KEY, socket);
+export function setTUIOHandler(socket: TUIOHandler) {
+	setContext(TUIO_HANDLER_CONTEXT_KEY, socket);
 }
 
 /**
@@ -22,10 +22,10 @@ export function setSocket(socket: TUIOHandler) {
  * @returns {TUIOHandler} The TUIOHandler instance
  * @throws {Error} If no TUIOHandler is found in context
  */
-export function getSocketContext(): TUIOHandler {
-	const socket = getContext<TUIOHandler | undefined>(TUIO_SOCKET_CONTEXT_KEY);
-	if (!socket) {
-		throw new Error('TUIOHandler not found. Did you forget to setSocket?');
+export function getTUIOHandlerContext(): TUIOHandler {
+	const tuioHandler = getContext<TUIOHandler | undefined>(TUIO_HANDLER_CONTEXT_KEY);
+	if (!tuioHandler) {
+		throw new Error('TUIOHandler not found. Did you forget to setTUIOHandler?');
 	}
-	return socket;
+	return tuioHandler;
 }
