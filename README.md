@@ -45,41 +45,51 @@ npm install svelte-tuio
 
 ### Basic Setup
 
-The simplest way to use the library is with `TUIOProvider`:
+The simplest way to use the library is with `TUIOProvider`, which automatically creates a `TUIOHandler` for you:
 
 ```svelte
 <script>
 	import { TUIOProvider } from 'svelte-tuio';
 	let { children } = $props();
 
-	
+
 	// Create WebSocket connection to your TUIO server
 	// Replace with your TouchDesigner WebSocket server address
 	const socket = new WebSocket('ws://localhost:8080');
 </script>
 
 <TUIOProvider {socket}>
+	<!-- Your app components can now access TUIO data via useTUIO() -->
 	{@render children?.()}
 </TUIOProvider>
 ```
 
-For more control, you can create the handler manually:
+**Custom Handler Configuration:**
+
+You can also create your own `TUIOHandler` with custom callbacks and pass it to the provider:
 
 ```svelte
 <script>
-	import { TUIOHandler, setTUIOHandler } from 'svelte-tuio';
+	import { TUIOProvider, TUIOHandler } from 'svelte-tuio';
+	let { children } = $props();
 
 	const socket = new WebSocket('ws://localhost:8080');
-	
+
 	const tuioHandler = new TUIOHandler({
 		socket,
 		onFingerTouchEnd: (u, v) => {
-			// Custom logic here
+			console.log(`Touch at ${u}, ${v}`);
+		},
+		onPlaceTangible: (touch) => {
+			console.log(`Tangible ${touch.classId} placed`);
 		}
 	});
-	
-	setTUIOHandler(tuioHandler);
 </script>
+
+<TUIOProvider {tuioHandler}>
+	<!-- Your app components can now access TUIO data via useTUIO() -->
+	{@render children?.()}
+</TUIOProvider>
 ```
 
 ### TouchDesigner Setup
@@ -95,15 +105,13 @@ Your TouchDesigner project needs to run a WebSocket server that sends TUIO event
 	import { useTUIO } from 'svelte-tuio';
 
 	const tuioHandler = useTUIO();
-
-	// State is already reactive via Svelte 5 runes ($state)
-	// No need for $: reactive statements!
+	let tangibles = $derived(tuioHandler.tangiblesManager.tangibles)
 </script>
 
 <div>
 	<p>Connected: {tuioHandler.isSocketConnected()}</p>
 
-	{#each tuioHandler.tangiblesManager.tangibles as tangible}
+	{#each tangibles as tangible}
 		<div>
 			Tangible {tangible.classId} at ({tangible.u}, {tangible.v})
 		</div>
@@ -122,6 +130,14 @@ Your TouchDesigner project needs to run a WebSocket server that sends TUIO event
 ```
 
 ## API
+
+### `TUIOProvider`
+
+Wrapper component that sets up TUIO context for your app.
+
+**Props:**
+- `socket` - WebSocket instance (automatically creates handler)
+- `tuioHandler` - Optional pre-configured TUIOHandler instance
 
 ### `TUIOHandler`
 
