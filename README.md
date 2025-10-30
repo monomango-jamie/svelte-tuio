@@ -45,18 +45,41 @@ npm install svelte-tuio
 
 ### Basic Setup
 
+The simplest way to use the library is with `TUIOProvider`:
+
 ```svelte
 <script>
 	import { TUIOProvider } from 'svelte-tuio';
+	let { children } = $props();
 
+	
 	// Create WebSocket connection to your TUIO server
 	// Replace with your TouchDesigner WebSocket server address
 	const socket = new WebSocket('ws://localhost:8080');
 </script>
 
 <TUIOProvider {socket}>
-	<!-- Your app components can now access TUIO data via useTUIO() -->
+	{@render children?.()}
 </TUIOProvider>
+```
+
+For more control, you can create the handler manually:
+
+```svelte
+<script>
+	import { TUIOHandler, setTUIOHandler } from 'svelte-tuio';
+
+	const socket = new WebSocket('ws://localhost:8080');
+	
+	const tuioHandler = new TUIOHandler({
+		socket,
+		onFingerTouchEnd: (u, v) => {
+			// Custom logic here
+		}
+	});
+	
+	setTUIOHandler(tuioHandler);
+</script>
 ```
 
 ### TouchDesigner Setup
@@ -105,7 +128,18 @@ Your TouchDesigner project needs to run a WebSocket server that sends TUIO event
 Main class for managing TUIO WebSocket connections.
 
 ```typescript
-const handler = new TUIOHandler(socket, simulateClick?);
+import type { TUIOHandlerConfig } from 'svelte-tuio';
+
+const config: TUIOHandlerConfig = {
+  socket: myWebSocket,
+  onFingerTouchEnd: (u, v) => { /* ... */ },
+  onFingerTouchStart: (u, v) => { /* ... */ },
+  onPlaceTangible: (touch) => { /* ... */ },
+  onRemoveTangible: (touch) => { /* ... */ },
+  onMoveTangible: (touch) => { /* ... */ }
+};
+
+const handler = new TUIOHandler(config);
 
 // Properties
 handler.tangiblesManager   // TangiblesManager instance
@@ -153,29 +187,28 @@ You can provide custom callbacks for any TUIO event:
 <script>
 	import { TUIOProvider, TUIOHandler } from 'svelte-tuio';
 	import { setTUIOHandler } from 'svelte-tuio';
-	import type { TUIOHandlerCallbacks } from 'svelte-tuio';
 
 	const socket = new WebSocket('ws://localhost:8080');
 
-	const callbacks: TUIOHandlerCallbacks = {
-		handleFingerTouchEnd: (u, v) => {
+	const tuioHandler = new TUIOHandler({
+		socket,
+		onFingerTouchEnd: (u, v) => {
 			console.log(`Finger touch end at: ${u}, ${v}`);
 		},
-		handleFingerTouchStart: (u, v) => {
+		onFingerTouchStart: (u, v) => {
 			console.log(`Finger touch start at: ${u}, ${v}`);
 		},
-		handlePlaceTangible: (touch) => {
+		onPlaceTangible: (touch) => {
 			console.log(`Tangible ${touch.classId} placed`);
 		},
-		handleRemoveTangible: (touch) => {
+		onRemoveTangible: (touch) => {
 			console.log(`Tangible ${touch.classId} removed`);
 		},
-		handleMoveTangible: (touch) => {
+		onMoveTangible: (touch) => {
 			console.log(`Tangible ${touch.classId} moved to ${touch.u}, ${touch.v}`);
 		}
-	};
-
-	const tuioHandler = new TUIOHandler(socket, callbacks);
+	});
+	
 	setTUIOHandler(tuioHandler);
 </script>
 
@@ -191,7 +224,12 @@ You can provide custom callbacks for any TUIO event:
 Full TypeScript support with exported types:
 
 ```typescript
-import type { TUIOTouch, TUIOEvent, TouchZone } from 'svelte-tuio';
+import type { 
+  TUIOTouch, 
+  TUIOEvent, 
+  TouchZone, 
+  TUIOHandlerConfig 
+} from 'svelte-tuio';
 ```
 
 ## Development

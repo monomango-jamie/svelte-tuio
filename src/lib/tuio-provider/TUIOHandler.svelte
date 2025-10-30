@@ -27,12 +27,13 @@
 		onTouchEnd?: TouchEventListener;
 	}
 
-	export interface TUIOHandlerCallbacks {
-		handleFingerTouchEnd?: (u: number, v: number) => void;
-		handleFingerTouchStart?: (u: number, v: number) => void;
-		handlePlaceTangible?: (touch: TUIOTouch) => void;
-		handleRemoveTangible?: (touch: TUIOTouch) => void;
-		handleMoveTangible?: (touch: TUIOTouch) => void;
+	export interface TUIOHandlerConfig {
+		socket: WebSocket;
+		onFingerTouchEnd?: (u: number, v: number) => void;
+		onFingerTouchStart?: (u: number, v: number) => void;
+		onPlaceTangible?: (touch: TUIOTouch) => void;
+		onRemoveTangible?: (touch: TUIOTouch) => void;
+		onMoveTangible?: (touch: TUIOTouch) => void;
 	}
 
 	/**
@@ -54,17 +55,16 @@
 		 * Sets up event listeners for messages, connection status, and errors.
 		 * Automatically handles TUIO touch events by parsing incoming JSON data.
 		 *
-		 * @param {WebSocket} socket - The WebSocket instance to use for TUIO events
-		 * @param {TUIOHandlerCallbacks} callbacks - Optional callbacks for TUIO events
+		 * @param {TUIOHandlerConfig} config - Configuration object with socket and optional event handlers
 		 */
-		constructor(socket: WebSocket, callbacks?: TUIOHandlerCallbacks) {
+		constructor(config: TUIOHandlerConfig) {
 			this.tangiblesManager = new TangiblesManager();
-			this.socket = socket;
-			this.onFingerTouchEnd = callbacks?.handleFingerTouchEnd || defaultSimulateClick;
-			this.onFingerTouchStart = callbacks?.handleFingerTouchStart || (() => {});
-			this.onPlaceTangible = callbacks?.handlePlaceTangible;
-			this.onRemoveTangible = callbacks?.handleRemoveTangible;
-			this.onMoveTangible = callbacks?.handleMoveTangible;
+			this.socket = config.socket;
+			this.onFingerTouchEnd = config.onFingerTouchEnd || defaultSimulateClick;
+			this.onFingerTouchStart = config.onFingerTouchStart || (() => {});
+			this.onPlaceTangible = config.onPlaceTangible;
+			this.onRemoveTangible = config.onRemoveTangible;
+			this.onMoveTangible = config.onMoveTangible;
 			this.addSocketEventListeners();
 		}
 
@@ -76,7 +76,7 @@
 		 * @private
 		 */
 		private addSocketEventListeners(): void {
-			this.socket.addEventListener('message', (event) => {
+			this.socket.addEventListener('message', (event: MessageEvent) => {
 				const data: TUIOEvent = JSON.parse(event.data);
 
 				if (data.touchesStart && data.touchesStart.length > 0) {

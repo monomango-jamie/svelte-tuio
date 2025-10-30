@@ -12,5 +12,5 @@ export { default as TangiblesDebugger } from './components/TangiblesDebugger.sve
 
 // Types
 export type { TUIOTouch, TUIOEvent } from './types/TUIO';
-export type { TouchZone, TUIOHandlerCallbacks } from './tuio-provider/TUIOHandler.svelte';
+export type { TouchZone, TUIOHandlerConfig } from './tuio-provider/TUIOHandler.svelte';
 export type { TangibleNodeData } from './tangible-manager/TangiblesManager.svelte';
