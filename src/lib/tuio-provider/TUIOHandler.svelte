@@ -41,7 +41,7 @@
 	 * Handles touch start, end, and move events from a TUIO-compatible server.
 	 */
 	export class TUIOHandler {
-		private socket: WebSocket;
+		public socket: WebSocket;
 		public touchZones = $state<TouchZone[]>([]);
 		public tangiblesManager: TangiblesManager;
 		private onFingerTouchEnd: (u: number, v: number) => void;

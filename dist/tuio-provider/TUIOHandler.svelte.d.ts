@@ -13,24 +13,35 @@ export interface TouchZone {
     onTouchStart?: TouchEventListener;
     onTouchEnd?: TouchEventListener;
 }
+export interface TUIOHandlerConfig {
+    socket: WebSocket;
+    onFingerTouchEnd?: (u: number, v: number) => void;
+    onFingerTouchStart?: (u: number, v: number) => void;
+    onPlaceTangible?: (touch: TUIOTouch) => void;
+    onRemoveTangible?: (touch: TUIOTouch) => void;
+    onMoveTangible?: (touch: TUIOTouch) => void;
+}
 /**
  * Manages WebSocket connections for TUIO (Tangible User Interface Objects) events.
  * Handles touch start, end, and move events from a TUIO-compatible server.
  */
 export declare class TUIOHandler {
-    private socket;
+    socket: WebSocket;
     touchZones: TouchZone[];
     tangiblesManager: TangiblesManager;
-    private simulateClick;
+    private onFingerTouchEnd;
+    private onFingerTouchStart;
+    private onPlaceTangible?;
+    private onRemoveTangible?;
+    private onMoveTangible?;
     /**
      * Creates a new TUIOHandler instance with an existing WebSocket connection.
      * Sets up event listeners for messages, connection status, and errors.
      * Automatically handles TUIO touch events by parsing incoming JSON data.
      *
-     * @param {WebSocket} socket - The WebSocket instance to use for TUIO events
-     * @param {function} simulateClick - Optional function to simulate clicks at coordinates
+     * @param {TUIOHandlerConfig} config - Configuration object with socket and optional event handlers
      */
-    constructor(socket: WebSocket, handleFingerTouchEnd?: (u: number, v: number) => void);
+    constructor(config: TUIOHandlerConfig);
     /**
      * Attaches event listeners to the existing WebSocket connection.
      * Sets up handlers for messages, connection status, and errors.
@@ -44,29 +55,36 @@ export declare class TUIOHandler {
      */
     removeSocket(): void;
     /**
+     * Handles finger touch start events from TUIO data (2Dcur profile).
+     * Calls the custom callback if provided, otherwise does nothing by default.
+     *
+     * @param {TUIOTouch} touch - The touch event data containing position coordinates
+     */
+    handleFingerTouchStart(touch: TUIOTouch): void;
+    /**
      * Handles finger touch end events from TUIO data (2Dcur profile).
-     * Simulates a click at the touch coordinates.
+     * Simulates a click at the touch coordinates by default.
      *
      * @param {TUIOTouch} touch - The touch event data containing position coordinates
      */
     handleFingerTouchEnd(touch: TUIOTouch): void;
     /**
      * Handles tangible placement events from TUIO data (2Dobj profile).
-     * Adds the tangible to the tangibles manager.
+     * Adds the tangible to the tangibles manager and calls custom callback if provided.
      *
      * @param {TUIOTouch} touch - The touch event data for the placed tangible
      */
     handlePlaceTangible(touch: TUIOTouch): void;
     /**
      * Handles tangible removal events from TUIO data (2Dobj profile).
-     * Removes the tangible from the tangibles manager.
+     * Removes the tangible from the tangibles manager and calls custom callback if provided.
      *
      * @param {TUIOTouch} touch - The touch event data for the removed tangible
      */
     handleRemoveTangible(touch: TUIOTouch): void;
     /**
      * Handles tangible movement events from TUIO data (2Dobj profile).
-     * Updates the tangible's position and rotation in the tangibles manager.
+     * Updates the tangible's position and rotation in the tangibles manager and calls custom callback if provided.
      *
      * @param {TUIOTouch} touch - The touch event data for the moved tangible
      */

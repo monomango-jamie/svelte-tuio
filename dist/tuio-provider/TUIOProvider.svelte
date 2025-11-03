@@ -2,8 +2,8 @@
 	import { setTUIOHandler } from './context';
 	import { TUIOHandler } from './TUIOHandler.svelte';
 
-	let { children, socket } = $props();
-	const tuioHandler = new TUIOHandler(socket);
+	let { children, socket, tuioHandler = new TUIOHandler({ socket }) } = $props();
+
 	setTUIOHandler(tuioHandler);
 </script>
 
