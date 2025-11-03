@@ -2,6 +2,7 @@
 	import type { TUIOEvent, TUIOTouch } from '../types/TUIO';
 	import { TangiblesManager } from '../tangible-manager/TangiblesManager.svelte';
 	import defaultSimulateClick from './defaultSimulateClick';
+	import type { SvelteSocket } from '@hardingjam/svelte-socket';
 
 	type TouchEventListener = (touch: TUIOTouch) => void;
 
@@ -28,7 +29,7 @@
 	}
 
 	export interface TUIOHandlerConfig {
-		socket: WebSocket;
+		svelteSocket: SvelteSocket;
 		onFingerTouchEnd?: (u: number, v: number) => void;
 		onFingerTouchStart?: (u: number, v: number) => void;
 		onPlaceTangible?: (touch: TUIOTouch) => void;
@@ -41,7 +42,7 @@
 	 * Handles touch start, end, and move events from a TUIO-compatible server.
 	 */
 	export class TUIOHandler {
-		public socket: WebSocket;
+		public svelteSocket: SvelteSocket;
 		public touchZones = $state<TouchZone[]>([]);
 		public tangiblesManager: TangiblesManager;
 		private onFingerTouchEnd: (u: number, v: number) => void;
@@ -59,7 +60,7 @@
 		 */
 		constructor(config: TUIOHandlerConfig) {
 			this.tangiblesManager = new TangiblesManager();
-			this.socket = config.socket;
+			this.svelteSocket = config.svelteSocket;
 			this.onFingerTouchEnd = config.onFingerTouchEnd || defaultSimulateClick;
 			this.onFingerTouchStart = config.onFingerTouchStart || (() => {});
 			this.onPlaceTangible = config.onPlaceTangible;
@@ -76,8 +77,8 @@
 		 * @private
 		 */
 		private addSocketEventListeners(): void {
-			this.socket.addEventListener('message', (event: MessageEvent) => {
-				const data: TUIOEvent = JSON.parse(event.data);
+			this.svelteSocket.addEventListener('message', (event: Event) => {
+				const data: TUIOEvent = JSON.parse((event as MessageEvent).data);
 
 				if (data.touchesStart && data.touchesStart.length > 0) {
 					data.touchesStart.forEach((touch: TUIOTouch) => {
@@ -108,26 +109,15 @@
 				}
 			});
 
-			this.socket.addEventListener('open', () => {
+			this.svelteSocket.addEventListener('open', () => {
 				console.log('🔌 Socket connected');
 			});
 
-			this.socket.addEventListener('error', (error) => {
+			this.svelteSocket.addEventListener('error', (error) => {
 				console.error('🔌 Socket error:', error);
 			});
 
-			return console.log('🔌 Socket created', this.socket);
-		}
-
-		/**
-		 * Closes the current WebSocket connection.
-		 */
-		public removeSocket(): void {
-			if (this.socket) {
-				console.log('🔌 Closing socket connection');
-				this.socket.close();
-			}
-			return;
+			return console.log('🔌 Socket created', this.svelteSocket);
 		}
 
 		/**
@@ -193,24 +183,6 @@
 			if (this.onMoveTangible) {
 				this.onMoveTangible(touch);
 			}
-		}
-
-		/**
-		 * Gets the current WebSocket instance.
-		 *
-		 * @returns {WebSocket | null} The current WebSocket instance
-		 */
-		public getSocket(): WebSocket | null {
-			return this.socket;
-		}
-
-		/**
-		 * Checks if the WebSocket is currently connected and ready for communication.
-		 *
-		 * @returns {boolean} True if the socket is connected and in OPEN state, false otherwise
-		 */
-		public isSocketConnected(): boolean {
-			return this.socket?.readyState === WebSocket.OPEN;
 		}
 	}
 </script>

@@ -1,5 +1,6 @@
 import type { TUIOTouch } from '../types/TUIO';
 import { TangiblesManager } from '../tangible-manager/TangiblesManager.svelte';
+import type { SvelteSocket } from '@hardingjam/svelte-socket';
 type TouchEventListener = (touch: TUIOTouch) => void;
 export interface TouchZone {
     id: string;
@@ -14,7 +15,7 @@ export interface TouchZone {
     onTouchEnd?: TouchEventListener;
 }
 export interface TUIOHandlerConfig {
-    socket: WebSocket;
+    svelteSocket: SvelteSocket;
     onFingerTouchEnd?: (u: number, v: number) => void;
     onFingerTouchStart?: (u: number, v: number) => void;
     onPlaceTangible?: (touch: TUIOTouch) => void;
@@ -26,7 +27,7 @@ export interface TUIOHandlerConfig {
  * Handles touch start, end, and move events from a TUIO-compatible server.
  */
 export declare class TUIOHandler {
-    socket: WebSocket;
+    svelteSocket: SvelteSocket;
     touchZones: TouchZone[];
     tangiblesManager: TangiblesManager;
     private onFingerTouchEnd;
@@ -50,10 +51,6 @@ export declare class TUIOHandler {
      * @private
      */
     private addSocketEventListeners;
-    /**
-     * Closes the current WebSocket connection.
-     */
-    removeSocket(): void;
     /**
      * Handles finger touch start events from TUIO data (2Dcur profile).
      * Calls the custom callback if provided, otherwise does nothing by default.
@@ -89,18 +86,6 @@ export declare class TUIOHandler {
      * @param {TUIOTouch} touch - The touch event data for the moved tangible
      */
     handleMoveTangible(touch: TUIOTouch): void;
-    /**
-     * Gets the current WebSocket instance.
-     *
-     * @returns {WebSocket | null} The current WebSocket instance
-     */
-    getSocket(): WebSocket | null;
-    /**
-     * Checks if the WebSocket is currently connected and ready for communication.
-     *
-     * @returns {boolean} True if the socket is connected and in OPEN state, false otherwise
-     */
-    isSocketConnected(): boolean;
 }
 interface $$__sveltets_2_IsomorphicComponent<Props extends Record<string, any> = any, Events extends Record<string, any> = any, Slots extends Record<string, any> = any, Exports = {}, Bindings = string> {
     new (options: import('svelte').ComponentConstructorOptions<Props>): import('svelte').SvelteComponent<Props, Events, Slots> & {
