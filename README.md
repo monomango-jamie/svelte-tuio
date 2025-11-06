@@ -107,10 +107,11 @@ Your TouchDesigner project needs to run a WebSocket server that sends TUIO event
 
 	const tuioHandler = useTUIO();
 	let tangibles = $derived(tuioHandler.tangiblesManager.tangibles);
+	let isConnected = $derived(tuioHandler.svelteSocket.isConnected);
 </script>
 
 <div>
-	<p>Connected: {tuioHandler.isSocketConnected()}</p>
+	<p>Connected: {isConnected}</p>
 
 	{#each tangibles as tangible}
 		<div>
