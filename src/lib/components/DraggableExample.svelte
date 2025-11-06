@@ -6,9 +6,9 @@
 	let isActive = $state(false);
 	let message = $state('Touch and drag me vertically!');
 	let currentDelta = $state(0);
-	
+
 	const SENSITIVITY = 0.05; // 5% of screen height
-	
+
 	// Calculate visual offset (scale delta for smooth visual feedback)
 	const visualOffset = $derived(currentDelta * 500); // Scale to pixels for visual effect
 
@@ -39,7 +39,7 @@
 							// Calculate delta in the y direction
 							const delta = touch.v - initialPosition.v;
 							currentDelta = delta;
-							
+
 							// Update state based on sensitivity threshold
 							if (delta >= SENSITIVITY) {
 								isPushedDown = true;
@@ -76,6 +76,7 @@
 		}
 	});
 </script>
+
 <div class="flex min-h-[600px] flex-col items-center justify-center gap-8 p-8">
 	<!-- 
 	<div class="min-w-[400px] rounded-2xl bg-white p-6 shadow-xl">
@@ -109,7 +110,7 @@
 	<!-- Draggable Box -->
 	<div
 		bind:this={draggableBox}
-		class="relative min-w-[400px] cursor-grab select-none rounded-2xl p-12 text-center text-white shadow-2xl transition-all duration-150 will-change-transform"
+		class="relative min-w-[400px] cursor-grab rounded-2xl p-12 text-center text-white shadow-2xl transition-all duration-150 will-change-transform select-none"
 		class:cursor-grabbing={isActive}
 		class:shadow-[0_20px_50px_rgba(0,0,0,0.3)]={isActive}
 		class:bg-gradient-to-br={true}
@@ -124,31 +125,41 @@
 		style="transform: translateY({visualOffset}px) scale({isActive ? 1.05 : 1})"
 	>
 		<h2 class="mb-6 text-2xl font-bold">{message}</h2>
-		
+
 		<!-- Visual Indicator -->
-		<div class="relative my-8 h-[120px] border-l-2 border-r-2 border-white/30">
+		<div class="relative my-8 h-[120px] border-r-2 border-l-2 border-white/30">
 			<!-- Threshold Line Top -->
-			<div class="absolute left-0 right-0 top-[10%] flex h-0.5 items-center justify-center bg-white/50">
-				<span class="rounded bg-black/30 px-2 py-1 text-xs font-semibold">Threshold ({-SENSITIVITY})</span>
+			<div
+				class="absolute top-[10%] right-0 left-0 flex h-0.5 items-center justify-center bg-white/50"
+			>
+				<span class="rounded bg-black/30 px-2 py-1 text-xs font-semibold"
+					>Threshold ({-SENSITIVITY})</span
+				>
 			</div>
-			
+
 			<!-- Center Line -->
-			<div class="absolute left-0 right-0 top-1/2 flex h-[3px] items-center justify-center bg-white/80">
+			<div
+				class="absolute top-1/2 right-0 left-0 flex h-[3px] items-center justify-center bg-white/80"
+			>
 				<span class="rounded bg-black/30 px-2 py-1 text-xs font-semibold">Start (0)</span>
 			</div>
-			
+
 			<!-- Threshold Line Bottom -->
-			<div class="absolute bottom-[10%] left-0 right-0 flex h-0.5 items-center justify-center bg-white/50">
-				<span class="rounded bg-black/30 px-2 py-1 text-xs font-semibold">Threshold (+{SENSITIVITY})</span>
+			<div
+				class="absolute right-0 bottom-[10%] left-0 flex h-0.5 items-center justify-center bg-white/50"
+			>
+				<span class="rounded bg-black/30 px-2 py-1 text-xs font-semibold"
+					>Threshold (+{SENSITIVITY})</span
+				>
 			</div>
-			
+
 			<!-- Position Marker -->
 			<div
 				class="absolute left-1/2 h-5 w-5 -translate-x-1/2 rounded-full border-2 border-white bg-yellow-400 shadow-lg transition-[top] duration-75 ease-out"
 				style="top: {50 + (currentDelta / SENSITIVITY) * 20}%"
 			></div>
 		</div>
-		
+
 		<p class="mt-6 text-sm font-semibold italic opacity-90">
 			{#if isPushedUp}
 				🔼 Dragging up past threshold!

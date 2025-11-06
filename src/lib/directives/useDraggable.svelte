@@ -72,7 +72,7 @@
 
 			// Invert v-coordinate: TUIO uses 0 at bottom, screen uses 0 at top
 			const screenV = rect.top / windowHeight;
-			const invertedV = 1 - screenV - (rect.height / windowHeight);
+			const invertedV = 1 - screenV - rect.height / windowHeight;
 
 			return {
 				u: rect.left / windowWidth,
