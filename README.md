@@ -168,7 +168,8 @@ const config: TUIOHandlerConfig = {
 	},
 	onMoveTangible: (touch) => {
 		/* ... */
-	}
+	},
+	debounceTime: 100  // Optional: throttle callbacks to once per 100ms
 };
 
 const handler = new TUIOHandler(config);
@@ -283,6 +284,33 @@ You can provide custom callbacks for any TUIO event:
 ```
 
 > **Note:** Custom tangible callbacks are called _in addition to_ the automatic TangiblesManager updates, allowing you to add extra functionality without losing the built-in state management.
+
+### Throttling Callbacks
+
+For performance optimization, especially with high-frequency touch events, you can throttle callback invocations using the `debounceTime` option:
+
+```typescript
+const tuioHandler = new TUIOHandler({
+	svelteSocket,
+	debounceTime: 100, // Minimum 100ms between callback invocations
+	onMoveTangible: (touch) => {
+		// This will only be called at most once per 100ms per tangible
+		console.log(`Tangible ${touch.classId} moved`);
+	}
+});
+```
+
+**How it works:**
+- `debounceTime` sets the minimum time (in milliseconds) between callback invocations
+- Each callback type (fingerTouchStart, fingerTouchEnd, etc.) is throttled independently  
+- For tangible callbacks, throttling is per tangible (by classId)
+- TangiblesManager state updates are NOT throttled (state always stays up-to-date)
+- Set to `0` (default) to disable throttling
+
+**Use cases:**
+- Throttle `onMoveTangible` to reduce expensive operations during dragging
+- Throttle touch events to prevent UI lag from rapid touches
+- Improve performance on lower-end devices
 
 ## TypeScript Support
 

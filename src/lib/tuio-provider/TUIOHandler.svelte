@@ -35,6 +35,8 @@
 		onPlaceTangible?: (touch: TUIOTouch) => void;
 		onRemoveTangible?: (touch: TUIOTouch) => void;
 		onMoveTangible?: (touch: TUIOTouch) => void;
+		/** Minimum time in milliseconds between callback invocations (throttling) */
+		debounceTime?: number;
 	}
 
 	/**
@@ -50,6 +52,8 @@
 		private onPlaceTangible?: (touch: TUIOTouch) => void;
 		private onRemoveTangible?: (touch: TUIOTouch) => void;
 		private onMoveTangible?: (touch: TUIOTouch) => void;
+		private debounceTime: number;
+		private lastCallTimes: Map<string, number> = new Map();
 
 		/**
 		 * Creates a new TUIOHandler instance with an existing WebSocket connection.
@@ -66,7 +70,28 @@
 			this.onPlaceTangible = config.onPlaceTangible;
 			this.onRemoveTangible = config.onRemoveTangible;
 			this.onMoveTangible = config.onMoveTangible;
+			this.debounceTime = config.debounceTime || 0;
 			this.addSocketEventListeners();
+		}
+
+		/**
+		 * Checks if enough time has passed since the last call to allow this callback.
+		 * @param key - Unique key for the callback being throttled
+		 * @returns true if the callback should be called, false if throttled
+		 * @private
+		 */
+		private shouldCallCallback(key: string): boolean {
+			if (this.debounceTime === 0) return true;
+			
+			const now = Date.now();
+			const lastCall = this.lastCallTimes.get(key);
+			
+			if (!lastCall || now - lastCall >= this.debounceTime) {
+				this.lastCallTimes.set(key, now);
+				return true;
+			}
+			
+			return false;
 		}
 
 	/**
@@ -147,7 +172,9 @@
 	 * @private
 	 */
 	private handleFingerTouchStart(touch: TUIOTouch): void {
-		this.onFingerTouchStart(touch.u, touch.v);
+		if (this.shouldCallCallback('fingerTouchStart')) {
+			this.onFingerTouchStart(touch.u, touch.v);
+		}
 	}
 
 	/**
@@ -158,7 +185,9 @@
 	 * @private
 	 */
 	private handleFingerTouchEnd(touch: TUIOTouch): void {
-		this.onFingerTouchEnd(touch.u, touch.v);
+		if (this.shouldCallCallback('fingerTouchEnd')) {
+			this.onFingerTouchEnd(touch.u, touch.v);
+		}
 	}
 
 	/**
@@ -170,7 +199,7 @@
 	 */
 	private handlePlaceTangible(touch: TUIOTouch): void {
 		this.tangiblesManager.addTangible(touch);
-		if (this.onPlaceTangible) {
+		if (this.onPlaceTangible && this.shouldCallCallback(`placeTangible-${touch.classId}`)) {
 			this.onPlaceTangible(touch);
 		}
 	}
@@ -184,7 +213,7 @@
 	 */
 	private handleRemoveTangible(touch: TUIOTouch): void {
 		this.tangiblesManager.removeTangible(touch.classId);
-		if (this.onRemoveTangible) {
+		if (this.onRemoveTangible && this.shouldCallCallback(`removeTangible-${touch.classId}`)) {
 			this.onRemoveTangible(touch);
 		}
 	}
@@ -198,7 +227,7 @@
 	 */
 	private handleMoveTangible(touch: TUIOTouch): void {
 		this.tangiblesManager.updateTangible(touch);
-		if (this.onMoveTangible) {
+		if (this.onMoveTangible && this.shouldCallCallback(`moveTangible-${touch.classId}`)) {
 			this.onMoveTangible(touch);
 		}
 	}
