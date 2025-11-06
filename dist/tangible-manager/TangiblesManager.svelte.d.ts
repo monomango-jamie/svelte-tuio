@@ -18,24 +18,22 @@ export declare class TangiblesManager {
     tangibles: TUIOTouch[];
     /** State tracking only the class IDs - for components that don't need position updates */
     tangibleClassIds: number[];
-    /**
-     * Retrieves the tangibles array.
-     * @returns The tangibles array.
-     */
-    getTangibles(): TUIOTouch[];
+    /** Internal map for O(1) lookups by classId */
+    private tangiblesMap;
     /**
      * Creates, initializes, and executes a new tangible instance.
+     * If the tangible already exists, it will be updated instead.
      * @param touch - TUIO touch data including classId, u, and v coordinates
-     * @returns A void promise that updates the tangibles store.
      */
-    addTangible(touch: TUIOTouch): Promise<void>;
+    addTangible(touch: TUIOTouch): void;
     /**
-     * Removes a tangible from the tangibles store with conditional animation.
+     * Removes a tangible from the tangibles store.
      * @param classId - The classId of the tangible to remove.
      */
     removeTangible(classId: number): void;
     /**
      * Updates a tangible in the tangibles store.
+     * Optimized for high-frequency updates by directly mutating the reactive object.
      * @param touch - TUIO touch data with updated u, v coordinates
      */
     updateTangible(touch: TUIOTouch): void;

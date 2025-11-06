@@ -35,6 +35,8 @@
 		onPlaceTangible?: (touch: TUIOTouch) => void;
 		onRemoveTangible?: (touch: TUIOTouch) => void;
 		onMoveTangible?: (touch: TUIOTouch) => void;
+		/** Minimum time in milliseconds between callback invocations (throttling) */
+		debounceTime?: number;
 	}
 
 	/**
@@ -50,6 +52,8 @@
 		private onPlaceTangible?: (touch: TUIOTouch) => void;
 		private onRemoveTangible?: (touch: TUIOTouch) => void;
 		private onMoveTangible?: (touch: TUIOTouch) => void;
+		private debounceTime: number;
+		private lastCallTimes: Map<string, number> = new Map();
 
 		/**
 		 * Creates a new TUIOHandler instance with an existing WebSocket connection.
@@ -66,7 +70,28 @@
 			this.onPlaceTangible = config.onPlaceTangible;
 			this.onRemoveTangible = config.onRemoveTangible;
 			this.onMoveTangible = config.onMoveTangible;
+			this.debounceTime = config.debounceTime || 0;
 			this.addSocketEventListeners();
+		}
+
+		/**
+		 * Checks if enough time has passed since the last call to allow this callback.
+		 * @param key - Unique key for the callback being throttled
+		 * @returns true if the callback should be called, false if throttled
+		 * @private
+		 */
+		private shouldCallCallback(key: string): boolean {
+			if (this.debounceTime === 0) return true;
+
+			const now = Date.now();
+			const lastCall = this.lastCallTimes.get(key);
+
+			if (!lastCall || now - lastCall >= this.debounceTime) {
+				this.lastCallTimes.set(key, now);
+				return true;
+			}
+
+			return false;
 		}
 
 		/**
@@ -117,7 +142,26 @@
 				console.error('🔌 Socket error:', error);
 			});
 
-			return console.log('🔌 Socket created', this.svelteSocket);
+			console.log('🔌 Socket created', this.svelteSocket);
+		}
+
+		/**
+		 * Registers a touch zone for tracking touch/tangible events in a specific screen region.
+		 * Touch zones are user-managed - you must implement your own hit detection logic.
+		 *
+		 * @param {TouchZone} zone - The touch zone configuration
+		 */
+		public registerTouchZone(zone: TouchZone): void {
+			this.touchZones.push(zone);
+		}
+
+		/**
+		 * Removes a touch zone by its ID.
+		 *
+		 * @param {string} zoneId - The ID of the zone to remove
+		 */
+		public unregisterTouchZone(zoneId: string): void {
+			this.touchZones = this.touchZones.filter((zone) => zone.id !== zoneId);
 		}
 
 		/**
@@ -125,9 +169,12 @@
 		 * Calls the custom callback if provided, otherwise does nothing by default.
 		 *
 		 * @param {TUIOTouch} touch - The touch event data containing position coordinates
+		 * @private
 		 */
-		public handleFingerTouchStart(touch: TUIOTouch): void {
-			this.onFingerTouchStart(touch.u, touch.v);
+		private handleFingerTouchStart(touch: TUIOTouch): void {
+			if (this.shouldCallCallback('fingerTouchStart')) {
+				this.onFingerTouchStart(touch.u, touch.v);
+			}
 		}
 
 		/**
@@ -135,9 +182,12 @@
 		 * Simulates a click at the touch coordinates by default.
 		 *
 		 * @param {TUIOTouch} touch - The touch event data containing position coordinates
+		 * @private
 		 */
-		public handleFingerTouchEnd(touch: TUIOTouch): void {
-			this.onFingerTouchEnd(touch.u, touch.v);
+		private handleFingerTouchEnd(touch: TUIOTouch): void {
+			if (this.shouldCallCallback('fingerTouchEnd')) {
+				this.onFingerTouchEnd(touch.u, touch.v);
+			}
 		}
 
 		/**
@@ -145,12 +195,11 @@
 		 * Adds the tangible to the tangibles manager and calls custom callback if provided.
 		 *
 		 * @param {TUIOTouch} touch - The touch event data for the placed tangible
+		 * @private
 		 */
-		public handlePlaceTangible(touch: TUIOTouch): void {
-			if (this.tangiblesManager) {
-				this.tangiblesManager.addTangible(touch);
-			}
-			if (this.onPlaceTangible) {
+		private handlePlaceTangible(touch: TUIOTouch): void {
+			this.tangiblesManager.addTangible(touch);
+			if (this.onPlaceTangible && this.shouldCallCallback(`placeTangible-${touch.classId}`)) {
 				this.onPlaceTangible(touch);
 			}
 		}
@@ -160,12 +209,11 @@
 		 * Removes the tangible from the tangibles manager and calls custom callback if provided.
 		 *
 		 * @param {TUIOTouch} touch - The touch event data for the removed tangible
+		 * @private
 		 */
-		public handleRemoveTangible(touch: TUIOTouch): void {
-			if (this.tangiblesManager) {
-				this.tangiblesManager.removeTangible(touch.classId);
-			}
-			if (this.onRemoveTangible) {
+		private handleRemoveTangible(touch: TUIOTouch): void {
+			this.tangiblesManager.removeTangible(touch.classId);
+			if (this.onRemoveTangible && this.shouldCallCallback(`removeTangible-${touch.classId}`)) {
 				this.onRemoveTangible(touch);
 			}
 		}
@@ -175,12 +223,11 @@
 		 * Updates the tangible's position and rotation in the tangibles manager and calls custom callback if provided.
 		 *
 		 * @param {TUIOTouch} touch - The touch event data for the moved tangible
+		 * @private
 		 */
-		public handleMoveTangible(touch: TUIOTouch): void {
-			if (this.tangiblesManager) {
-				this.tangiblesManager.updateTangible(touch);
-			}
-			if (this.onMoveTangible) {
+		private handleMoveTangible(touch: TUIOTouch): void {
+			this.tangiblesManager.updateTangible(touch);
+			if (this.onMoveTangible && this.shouldCallCallback(`moveTangible-${touch.classId}`)) {
 				this.onMoveTangible(touch);
 			}
 		}

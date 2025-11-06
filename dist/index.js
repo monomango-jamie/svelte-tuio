@@ -7,3 +7,5 @@ export { setTUIOHandler, getTUIOHandlerContext } from './tuio-provider/context';
 export { TangiblesManager } from './tangible-manager/TangiblesManager.svelte';
 // Components
 export { default as TangiblesDebugger } from './components/TangiblesDebugger.svelte';
+// Directives/Actions
+export { draggable } from './directives/useDraggable.svelte';

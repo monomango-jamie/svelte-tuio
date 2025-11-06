@@ -4,6 +4,8 @@ export { default as useTUIO } from './tuio-provider/useTUIO';
 export { setTUIOHandler, getTUIOHandlerContext } from './tuio-provider/context';
 export { TangiblesManager } from './tangible-manager/TangiblesManager.svelte';
 export { default as TangiblesDebugger } from './components/TangiblesDebugger.svelte';
+export { draggable } from './directives/useDraggable.svelte';
 export type { TUIOTouch, TUIOEvent } from './types/TUIO';
 export type { TouchZone, TUIOHandlerConfig } from './tuio-provider/TUIOHandler.svelte';
 export type { TangibleNodeData } from './tangible-manager/TangiblesManager.svelte';
+export type { DraggableConfig, DraggableState } from './directives/useDraggable.svelte';
