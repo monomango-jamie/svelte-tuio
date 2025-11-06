@@ -76,9 +76,8 @@
 		}
 	});
 </script>
-
 <div class="flex min-h-[600px] flex-col items-center justify-center gap-8 p-8">
-	<!-- Info Panel -->
+	<!-- 
 	<div class="min-w-[400px] rounded-2xl bg-white p-6 shadow-xl">
 		<h3 class="mb-4 text-xl font-bold text-gray-800">Draggable Touch Demo</h3>
 		<div class="grid grid-cols-2 gap-4">
@@ -105,8 +104,8 @@
 				</span>
 			</div>
 		</div>
-	</div>
-
+	</div> 
+-->
 	<!-- Draggable Box -->
 	<div
 		bind:this={draggableBox}
