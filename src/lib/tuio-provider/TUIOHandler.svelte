@@ -230,22 +230,28 @@
 			});
 		}
 
-		/**
-		 * Checks if a touch is within a zone's bounds.
-		 *
-		 * @param {TUIOTouch} touch - The touch to check
-		 * @param {TouchZone} zone - The zone to check against
-		 * @returns {boolean} True if the touch is within the zone
-		 * @private
-		 */
-		private isTouchInZone(touch: TUIOTouch, zone: TouchZone): boolean {
-			return (
-				touch.u >= zone.u &&
-				touch.u <= zone.u + zone.normalisedWidth &&
-				touch.v >= zone.v &&
-				touch.v <= zone.v + zone.normalisedHeight
-			);
-		}
+	/**
+	 * Checks if a touch is within a zone's bounds.
+	 * Inverts v-coordinate because TUIO uses 0 at bottom, 1 at top,
+	 * while screen coordinates use 0 at top, 1 at bottom.
+	 *
+	 * @param {TUIOTouch} touch - The touch to check
+	 * @param {TouchZone} zone - The zone to check against
+	 * @returns {boolean} True if the touch is within the zone
+	 * @private
+	 */
+	private isTouchInZone(touch: TUIOTouch, zone: TouchZone): boolean {
+		// Invert v-coordinate for TUIO system (0 at bottom, 1 at top)
+		const invertedTouchV = 1 - touch.v;
+		const invertedZoneV = 1 - zone.v;
+
+		return (
+			touch.u >= zone.u &&
+			touch.u <= zone.u + zone.normalisedWidth &&
+			invertedTouchV >= invertedZoneV &&
+			invertedTouchV <= invertedZoneV + zone.normalisedHeight
+		);
+	}
 
 		/**
 		 * Handles tangible placement events from TUIO data (2Dobj profile).

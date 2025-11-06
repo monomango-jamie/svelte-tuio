@@ -64,14 +64,19 @@
 		let activeTouchId: number | null = null;
 
 		// Calculate touch zone from element's position
+		// Note: v-coordinate is inverted because TUIO uses 0 at bottom, 1 at top
 		function calculateTouchZone(): Omit<TouchZone, 'id'> {
 			const rect = node.getBoundingClientRect();
 			const windowWidth = window.innerWidth;
 			const windowHeight = window.innerHeight;
 
+			// Invert v-coordinate: TUIO uses 0 at bottom, screen uses 0 at top
+			const screenV = rect.top / windowHeight;
+			const invertedV = 1 - screenV - (rect.height / windowHeight);
+
 			return {
 				u: rect.left / windowWidth,
-				v: rect.top / windowHeight,
+				v: invertedV,
 				normalisedWidth: rect.width / windowWidth,
 				normalisedHeight: rect.height / windowHeight
 			};
