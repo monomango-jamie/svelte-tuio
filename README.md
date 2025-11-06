@@ -179,6 +179,45 @@ handler.touchZones; // Array of touch zones ($state)
 handler.svelteSocket; // SvelteSocket instance
 ```
 
+### Touch Zones
+
+Touch zones allow you to define regions of the screen and attach callbacks for touch/tangible events within those regions. Touch zones are **user-managed** - you register zones and implement your own logic to check if touches fall within zones.
+
+```typescript
+import type { TouchZone } from 'svelte-tuio';
+
+const tuioHandler = useTUIO();
+
+// Define a touch zone
+const zone: TouchZone = {
+	id: 'my-zone',
+	u: 0.1,              // Left edge (normalized 0-1)
+	v: 0.1,              // Bottom edge (normalized 0-1)
+	normalisedWidth: 0.3,
+	normalisedHeight: 0.3,
+	onPlaceTangible: (touch) => {
+		console.log('Tangible placed in zone', touch);
+	},
+	onRemoveTangible: (touch) => {
+		console.log('Tangible removed from zone', touch);
+	},
+	onMoveTangible: (touch) => {
+		console.log('Tangible moved in zone', touch);
+	}
+};
+
+// Register the zone
+tuioHandler.registerTouchZone(zone);
+
+// Remove a zone when done
+tuioHandler.unregisterTouchZone('my-zone');
+
+// You must implement your own logic to check if touches are within zones
+// and call the appropriate zone callbacks
+```
+
+**Note:** The library provides touch zone registration and storage, but you are responsible for implementing the hit detection logic and calling zone callbacks.
+
 ### `TangiblesManager`
 
 Manages tangible objects with reactive state. All tangible operations are handled internally by `TUIOHandler`.

@@ -69,16 +69,16 @@
 			this.addSocketEventListeners();
 		}
 
-		/**
-		 * Attaches event listeners to the existing WebSocket connection.
-		 * Sets up handlers for messages, connection status, and errors.
-		 * Automatically parses and routes TUIO events to appropriate handlers.
-		 *
-		 * @private
-		 */
-		private addSocketEventListeners(): void {
-			this.svelteSocket.addEventListener('message', (event: Event) => {
-				const data: TUIOEvent = JSON.parse((event as MessageEvent).data);
+	/**
+	 * Attaches event listeners to the existing WebSocket connection.
+	 * Sets up handlers for messages, connection status, and errors.
+	 * Automatically parses and routes TUIO events to appropriate handlers.
+	 *
+	 * @private
+	 */
+	private addSocketEventListeners(): void {
+		this.svelteSocket.addEventListener('message', (event: Event) => {
+			const data: TUIOEvent = JSON.parse((event as MessageEvent).data);
 
 				if (data.touchesStart && data.touchesStart.length > 0) {
 					data.touchesStart.forEach((touch: TUIOTouch) => {
@@ -117,16 +117,35 @@
 				console.error('🔌 Socket error:', error);
 			});
 
-			return console.log('🔌 Socket created', this.svelteSocket);
-		}
+		return console.log('🔌 Socket created', this.svelteSocket);
+	}
 
-		/**
-		 * Handles finger touch start events from TUIO data (2Dcur profile).
-		 * Calls the custom callback if provided, otherwise does nothing by default.
-		 *
-		 * @param {TUIOTouch} touch - The touch event data containing position coordinates
-		 */
-		public handleFingerTouchStart(touch: TUIOTouch): void {
+	/**
+	 * Registers a touch zone for tracking touch/tangible events in a specific screen region.
+	 * Touch zones are user-managed - you must implement your own hit detection logic.
+	 *
+	 * @param {TouchZone} zone - The touch zone configuration
+	 */
+	public registerTouchZone(zone: TouchZone): void {
+		this.touchZones.push(zone);
+	}
+
+	/**
+	 * Removes a touch zone by its ID.
+	 *
+	 * @param {string} zoneId - The ID of the zone to remove
+	 */
+	public unregisterTouchZone(zoneId: string): void {
+		this.touchZones = this.touchZones.filter((zone) => zone.id !== zoneId);
+	}
+
+	/**
+	 * Handles finger touch start events from TUIO data (2Dcur profile).
+	 * Calls the custom callback if provided, otherwise does nothing by default.
+	 *
+	 * @param {TUIOTouch} touch - The touch event data containing position coordinates
+	 */
+	public handleFingerTouchStart(touch: TUIOTouch): void {
 			this.onFingerTouchStart(touch.u, touch.v);
 		}
 
