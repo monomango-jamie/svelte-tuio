@@ -34,7 +34,7 @@
 	<!-- Tangibles Manager -->
 	<section class="mb-8 rounded-lg bg-gray-100 p-4">
 		<h2 class="mb-4 text-xl font-semibold text-gray-700">
-			Tangibles ({tuioHandler.tangiblesManager.tangibles.length})
+			Tangibles & Touches ({tuioHandler.tangiblesManager.tangibles.length})
 		</h2>
 		{#if tuioHandler.tangiblesManager.tangibles.length > 0}
 			<div class="overflow-hidden rounded shadow-sm">
@@ -78,7 +78,7 @@
 				</table>
 			</div>
 		{:else}
-			<p class="my-4 text-gray-600 italic">No tangibles detected</p>
+			<p class="my-4 text-gray-600 italic">No tangibles or touches detected</p>
 		{/if}
 	</section>
 

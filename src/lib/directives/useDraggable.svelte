@@ -8,14 +8,14 @@
 		direction?: 'x' | 'y';
 		/** Sensitivity threshold (0-1, representing percentage of screen) */
 		sensitivity?: number;
-		/** Whether to track tangibles (2Dobj) or finger touches (2Dcur) */
-		trackTangibles?: boolean;
 		/** Callback when pushed in positive direction (right/down) */
 		onPushPositive?: () => void;
 		/** Callback when pushed in negative direction (left/up) */
 		onPushNegative?: () => void;
 		/** Callback when movement ends */
 		onRelease?: () => void;
+		/** Callback on every move with the current delta */
+		onMove?: (delta: number) => void;
 	}
 
 	export interface DraggableState {
@@ -28,9 +28,9 @@
 	}
 
 	/**
-	 * Svelte action that integrates with TUIO to track touch/tangible movements
+	 * Svelte action that integrates with TUIO to track finger touch movements (2Dcur)
 	 * and determine directional pushes based on sensitivity thresholds.
-	 * 
+	 *
 	 * @example
 	 * ```svelte
 	 * <div use:draggable={{ direction: 'y', sensitivity: 0.05 }}>
@@ -42,10 +42,10 @@
 		const {
 			direction = 'y',
 			sensitivity = 0.05,
-			trackTangibles = true,
 			onPushPositive,
 			onPushNegative,
-			onRelease
+			onRelease,
+			onMove
 		} = config;
 
 		// Get TUIO handler from context
@@ -59,19 +59,9 @@
 
 		// State tracking
 		let initialPosition = { u: 0, v: 0 };
-		let currentPosition = { u: 0, v: 0 };
 		let isTracking = false;
 		let zoneId = `draggable-${Math.random().toString(36).substr(2, 9)}`;
-
-		// Reactive state that external components can bind to
-		const state = $state<DraggableState>({
-			isPushedUp: false,
-			isPushedDown: false,
-			isPushedLeft: false,
-			isPushedRight: false,
-			currentDelta: 0,
-			isActive: false
-		});
+		let activeTouchId: number | null = null;
 
 		// Calculate touch zone from element's position
 		function calculateTouchZone(): Omit<TouchZone, 'id'> {
@@ -87,86 +77,56 @@
 			};
 		}
 
-		// Check if touch is within the element's bounds
-		function isWithinBounds(touch: TUIOTouch): boolean {
-			const zone = calculateTouchZone();
-			return (
-				touch.u >= zone.u &&
-				touch.u <= zone.u + zone.normalisedWidth &&
-				touch.v >= zone.v &&
-				touch.v <= zone.v + zone.normalisedHeight
-			);
-		}
-
 		// Update state based on movement delta
-		function updateState(delta: number) {
-			state.currentDelta = delta;
-			
+		function updateMovement(delta: number) {
+			// Call the onMove callback with current delta
+			onMove?.(delta);
+
+			// Check if we've exceeded the sensitivity threshold
 			if (direction === 'y') {
-				state.isPushedDown = delta >= sensitivity;
-				state.isPushedUp = delta <= -sensitivity;
-				
-				if (state.isPushedDown) onPushPositive?.();
-				if (state.isPushedUp) onPushNegative?.();
+				const isPushedDown = delta >= sensitivity;
+				const isPushedUp = delta <= -sensitivity;
+
+				if (isPushedDown) onPushPositive?.();
+				if (isPushedUp) onPushNegative?.();
 			} else {
-				state.isPushedRight = delta >= sensitivity;
-				state.isPushedLeft = delta <= -sensitivity;
-				
-				if (state.isPushedRight) onPushPositive?.();
-				if (state.isPushedLeft) onPushNegative?.();
+				const isPushedRight = delta >= sensitivity;
+				const isPushedLeft = delta <= -sensitivity;
+
+				if (isPushedRight) onPushPositive?.();
+				if (isPushedLeft) onPushNegative?.();
 			}
 		}
 
 		// Reset state
 		function resetState() {
-			state.isPushedUp = false;
-			state.isPushedDown = false;
-			state.isPushedLeft = false;
-			state.isPushedRight = false;
-			state.currentDelta = 0;
-			state.isActive = false;
 			isTracking = false;
+			activeTouchId = null;
 			onRelease?.();
 		}
 
-		// Touch zone callbacks
+		// Touch zone callbacks for finger touches (2Dcur)
 		const touchZone: TouchZone = {
 			id: zoneId,
 			...calculateTouchZone(),
 			onTouchStart: (touch: TUIOTouch) => {
-				if (!trackTangibles && isWithinBounds(touch)) {
-					initialPosition = { u: touch.u, v: touch.v };
-					currentPosition = { u: touch.u, v: touch.v };
-					isTracking = true;
-					state.isActive = true;
-				}
+				// Start tracking this touch
+				initialPosition = { u: touch.u, v: touch.v };
+				isTracking = true;
+				activeTouchId = touch.id;
 			},
-			onPlaceTangible: (touch: TUIOTouch) => {
-				if (trackTangibles && isWithinBounds(touch)) {
-					initialPosition = { u: touch.u, v: touch.v };
-					currentPosition = { u: touch.u, v: touch.v };
-					isTracking = true;
-					state.isActive = true;
-				}
-			},
-			onMoveTangible: (touch: TUIOTouch) => {
-				if (trackTangibles && isTracking && isWithinBounds(touch)) {
-					currentPosition = { u: touch.u, v: touch.v };
-					
-					const delta = direction === 'y' 
-						? currentPosition.v - initialPosition.v
-						: currentPosition.u - initialPosition.u;
-					
-					updateState(delta);
-				}
-			},
-			onRemoveTangible: (touch: TUIOTouch) => {
-				if (trackTangibles && isTracking) {
-					resetState();
+			onTouchMove: (touch: TUIOTouch) => {
+				// Only track the touch that started in this zone
+				if (isTracking && touch.id === activeTouchId) {
+					const delta =
+						direction === 'y' ? touch.v - initialPosition.v : touch.u - initialPosition.u;
+
+					updateMovement(delta);
 				}
 			},
 			onTouchEnd: (touch: TUIOTouch) => {
-				if (!trackTangibles && isTracking) {
+				// Only reset if it's our tracked touch
+				if (isTracking && touch.id === activeTouchId) {
 					resetState();
 				}
 			}
@@ -191,16 +151,27 @@
 	 * Fallback to mouse events when TUIO is not available
 	 */
 	function setupMouseFallback(node: HTMLElement, config: DraggableConfig) {
-		const { direction = 'y', sensitivity = 50, onPushPositive, onPushNegative, onRelease } = config;
-		
+		const {
+			direction = 'y',
+			sensitivity = 50,
+			onPushPositive,
+			onPushNegative,
+			onRelease,
+			onMove
+		} = config;
+
 		let isMouseDown = false;
 		let startX = 0;
 		let startY = 0;
+		let lastTriggeredPositive = false;
+		let lastTriggeredNegative = false;
 
 		const handleMouseDown = (event: MouseEvent) => {
 			isMouseDown = true;
 			startX = event.clientX;
 			startY = event.clientY;
+			lastTriggeredPositive = false;
+			lastTriggeredNegative = false;
 		};
 
 		const handleMouseMove = (event: MouseEvent) => {
@@ -210,11 +181,23 @@
 			const deltaY = event.clientY - startY;
 			const delta = direction === 'y' ? deltaY : deltaX;
 
-			if (Math.abs(delta) >= sensitivity) {
-				if (delta > 0) {
+			// Normalize delta to 0-1 range (convert pixels to percentage of window)
+			const normalizedDelta =
+				direction === 'y' ? delta / window.innerHeight : delta / window.innerWidth;
+
+			// Call onMove with normalized delta
+			onMove?.(normalizedDelta);
+
+			// Check sensitivity threshold
+			if (Math.abs(normalizedDelta) >= sensitivity) {
+				if (normalizedDelta > 0 && !lastTriggeredPositive) {
 					onPushPositive?.();
-				} else {
+					lastTriggeredPositive = true;
+					lastTriggeredNegative = false;
+				} else if (normalizedDelta < 0 && !lastTriggeredNegative) {
 					onPushNegative?.();
+					lastTriggeredNegative = true;
+					lastTriggeredPositive = false;
 				}
 			}
 		};
