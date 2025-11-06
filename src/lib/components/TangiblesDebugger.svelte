@@ -1,6 +1,8 @@
 <script lang="ts">
 	import useTUIO from '$lib/tuio-provider/useTUIO';
 	const tuioHandler = useTUIO();
+
+	const isConnected = $derived(tuioHandler.svelteSocket.connectionStatus === WebSocket.OPEN);
 </script>
 
 <div class="max-w-full overflow-x-auto p-4 font-mono">
@@ -18,10 +20,10 @@
 						</td>
 						<td
 							class="border-b border-gray-200 p-3 font-bold"
-							class:text-green-600={tuioHandler.isSocketConnected()}
-							class:text-red-600={!tuioHandler.isSocketConnected()}
+							class:text-green-600={isConnected}
+							class:text-red-600={!isConnected}
 						>
-							{tuioHandler.isSocketConnected() ? '✓ Connected' : '✗ Disconnected'}
+							{isConnected ? '✓ Connected' : '✗ Disconnected'}
 						</td>
 					</tr>
 				</tbody>

@@ -2,15 +2,16 @@
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import TUIOProvider from '$lib/tuio-provider/TUIOProvider.svelte';
-
+	import { SvelteSocket } from '@hardingjam/svelte-socket';
+	
 	let { children } = $props();
-	const socket = new WebSocket('ws://localhost:9980/');
+	const svelteSocket = new SvelteSocket({ url: 'ws://localhost:9980/' });
 </script>
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-<TUIOProvider {socket}>
+<TUIOProvider {svelteSocket}>
 	{@render children?.()}
 </TUIOProvider>
