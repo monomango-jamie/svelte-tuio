@@ -108,12 +108,12 @@ Access reactive TUIO state in your components using `$derived`:
 	import { useTUIO } from 'svelte-tuio';
 
 	const tuioHandler = useTUIO();
-	
+
 	// Access reactive state with $derived
 	let tangibles = $derived(tuioHandler.tangiblesManager.tangibles);
 	let tangibleClassIds = $derived(tuioHandler.tangiblesManager.tangibleClassIds);
 	let isConnected = $derived(tuioHandler.svelteSocket.isConnected);
-	
+
 	// Derived computations
 	let tangibleCount = $derived(tangibles.length);
 	let hasTangibles = $derived(tangibleCount > 0);
@@ -183,7 +183,7 @@ const config: TUIOHandlerConfig = {
 	onMoveTangible: (touch) => {
 		/* ... */
 	},
-	debounceTime: 100  // Optional: throttle callbacks to once per 100ms
+	debounceTime: 100 // Optional: throttle callbacks to once per 100ms
 };
 
 const handler = new TUIOHandler(config);
@@ -206,8 +206,8 @@ const tuioHandler = useTUIO();
 // Define a touch zone
 const zone: TouchZone = {
 	id: 'my-zone',
-	u: 0.1,              // Left edge (normalized 0-1)
-	v: 0.1,              // Bottom edge (normalized 0-1)
+	u: 0.1, // Left edge (normalized 0-1)
+	v: 0.1, // Bottom edge (normalized 0-1)
 	normalisedWidth: 0.3,
 	normalisedHeight: 0.3,
 	onPlaceTangible: (touch) => {
@@ -239,7 +239,7 @@ Manages tangible objects with reactive state. All tangible operations are handle
 
 ```typescript
 // Public Properties (reactive $state - use with $derived)
-manager.tangibles;        // TUIOTouch[] - All active tangibles with full data
+manager.tangibles; // TUIOTouch[] - All active tangibles with full data
 manager.tangibleClassIds; // number[] - Just the class IDs for performance
 ```
 
@@ -248,18 +248,16 @@ manager.tangibleClassIds; // number[] - Just the class IDs for performance
 ```svelte
 <script>
 	import { useTUIO } from 'svelte-tuio';
-	
+
 	const tuioHandler = useTUIO();
 	const manager = tuioHandler.tangiblesManager;
-	
+
 	// Use $derived to reactively access state
 	let tangibles = $derived(manager.tangibles);
 	let classIds = $derived(manager.tangibleClassIds);
-	
+
 	// Derived computations update automatically
-	let specificTangible = $derived(
-		tangibles.find(t => t.classId === 14)
-	);
+	let specificTangible = $derived(tangibles.find((t) => t.classId === 14));
 	let hasSpecificTangible = $derived(classIds.includes(14));
 </script>
 
@@ -338,13 +336,15 @@ const tuioHandler = new TUIOHandler({
 ```
 
 **How it works:**
+
 - `debounceTime` sets the minimum time (in milliseconds) between callback invocations
-- Each callback type (fingerTouchStart, fingerTouchEnd, etc.) is throttled independently  
+- Each callback type (fingerTouchStart, fingerTouchEnd, etc.) is throttled independently
 - For tangible callbacks, throttling is per tangible (by classId)
 - TangiblesManager state updates are NOT throttled (state always stays up-to-date)
 - Set to `0` (default) to disable throttling
 
 **Use cases:**
+
 - Throttle `onMoveTangible` to reduce expensive operations during dragging
 - Throttle touch events to prevent UI lag from rapid touches
 - Improve performance on lower-end devices
