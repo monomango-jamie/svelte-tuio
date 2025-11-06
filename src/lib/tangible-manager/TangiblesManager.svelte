@@ -26,30 +26,25 @@
 			return this.tangibles;
 		}
 
-		/**
-		 * Creates, initializes, and executes a new tangible instance.
-		 * @param touch - TUIO touch data including classId, u, and v coordinates
-		 * @returns A void promise that updates the tangibles store.
-		 */
-		public async addTangible(touch: TUIOTouch): Promise<void> {
-			if (this.tangibleClassIds.includes(touch.classId)) {
-				return;
-			}
-
-			// Check if tangible already exists
-			if (this.tangibleClassIds.includes(touch.classId)) {
-				// Tangible already exists, just update it
-				this.updateTangible(touch);
-				return;
-			}
-
-			// Create new tangible only if it doesn't exist
-			const newTangible = $state<TUIOTouch>({
-				...touch
-			});
-			this.tangibles = [...this.tangibles, newTangible];
-			this.tangibleClassIds = [...this.tangibleClassIds, touch.classId];
+	/**
+	 * Creates, initializes, and executes a new tangible instance.
+	 * If the tangible already exists, it will be updated instead.
+	 * @param touch - TUIO touch data including classId, u, and v coordinates
+	 */
+	public addTangible(touch: TUIOTouch): void {
+		// If tangible already exists, update it instead
+		if (this.tangibleClassIds.includes(touch.classId)) {
+			this.updateTangible(touch);
+			return;
 		}
+
+		// Create new tangible
+		const newTangible = $state<TUIOTouch>({
+			...touch
+		});
+		this.tangibles = [...this.tangibles, newTangible];
+		this.tangibleClassIds = [...this.tangibleClassIds, touch.classId];
+	}
 
 		/**
 		 * Removes a tangible from the tangibles store with conditional animation.
