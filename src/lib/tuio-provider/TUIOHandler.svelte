@@ -113,11 +113,11 @@
 				console.log('🔌 Socket connected');
 			});
 
-			this.svelteSocket.addEventListener('error', (error) => {
-				console.error('🔌 Socket error:', error);
-			});
+		this.svelteSocket.addEventListener('error', (error) => {
+			console.error('🔌 Socket error:', error);
+		});
 
-		return console.log('🔌 Socket created', this.svelteSocket);
+		console.log('🔌 Socket created', this.svelteSocket);
 	}
 
 	/**
