@@ -159,49 +159,43 @@
 			this.onFingerTouchEnd(touch.u, touch.v);
 		}
 
-		/**
-		 * Handles tangible placement events from TUIO data (2Dobj profile).
-		 * Adds the tangible to the tangibles manager and calls custom callback if provided.
-		 *
-		 * @param {TUIOTouch} touch - The touch event data for the placed tangible
-		 */
-		public handlePlaceTangible(touch: TUIOTouch): void {
-			if (this.tangiblesManager) {
-				this.tangiblesManager.addTangible(touch);
-			}
-			if (this.onPlaceTangible) {
-				this.onPlaceTangible(touch);
-			}
+	/**
+	 * Handles tangible placement events from TUIO data (2Dobj profile).
+	 * Adds the tangible to the tangibles manager and calls custom callback if provided.
+	 *
+	 * @param {TUIOTouch} touch - The touch event data for the placed tangible
+	 */
+	public handlePlaceTangible(touch: TUIOTouch): void {
+		this.tangiblesManager.addTangible(touch);
+		if (this.onPlaceTangible) {
+			this.onPlaceTangible(touch);
 		}
+	}
 
-		/**
-		 * Handles tangible removal events from TUIO data (2Dobj profile).
-		 * Removes the tangible from the tangibles manager and calls custom callback if provided.
-		 *
-		 * @param {TUIOTouch} touch - The touch event data for the removed tangible
-		 */
-		public handleRemoveTangible(touch: TUIOTouch): void {
-			if (this.tangiblesManager) {
-				this.tangiblesManager.removeTangible(touch.classId);
-			}
-			if (this.onRemoveTangible) {
-				this.onRemoveTangible(touch);
-			}
+	/**
+	 * Handles tangible removal events from TUIO data (2Dobj profile).
+	 * Removes the tangible from the tangibles manager and calls custom callback if provided.
+	 *
+	 * @param {TUIOTouch} touch - The touch event data for the removed tangible
+	 */
+	public handleRemoveTangible(touch: TUIOTouch): void {
+		this.tangiblesManager.removeTangible(touch.classId);
+		if (this.onRemoveTangible) {
+			this.onRemoveTangible(touch);
 		}
+	}
 
-		/**
-		 * Handles tangible movement events from TUIO data (2Dobj profile).
-		 * Updates the tangible's position and rotation in the tangibles manager and calls custom callback if provided.
-		 *
-		 * @param {TUIOTouch} touch - The touch event data for the moved tangible
-		 */
-		public handleMoveTangible(touch: TUIOTouch): void {
-			if (this.tangiblesManager) {
-				this.tangiblesManager.updateTangible(touch);
-			}
-			if (this.onMoveTangible) {
-				this.onMoveTangible(touch);
-			}
+	/**
+	 * Handles tangible movement events from TUIO data (2Dobj profile).
+	 * Updates the tangible's position and rotation in the tangibles manager and calls custom callback if provided.
+	 *
+	 * @param {TUIOTouch} touch - The touch event data for the moved tangible
+	 */
+	public handleMoveTangible(touch: TUIOTouch): void {
+		this.tangiblesManager.updateTangible(touch);
+		if (this.onMoveTangible) {
+			this.onMoveTangible(touch);
 		}
+	}
 	}
 </script>
