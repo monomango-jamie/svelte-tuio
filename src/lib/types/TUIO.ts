@@ -68,23 +68,3 @@ export interface TUIOEvent {
 	/** Pre-existing touches that didn't change in this event */
 	touchesNoChange: TUIOTouch[];
 }
-
-/**
- * Main TUIO data structure containing all events
- */
-export interface TUIOData {
-	/** List of TUIO events in chronological order (oldest to newest) */
-	events: TUIOEvent[];
-}
-
-/**
- * Helper type for touch state categorization
- */
-export type TouchState = 'start' | 'move' | 'end' | 'noChange';
-
-/**
- * Utility type for accessing all touches from an event regardless of state
- */
-export type AllTouches = {
-	[K in TouchState]: TUIOTouch[];
-};
