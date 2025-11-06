@@ -22,9 +22,11 @@
 		onRemoveTangible?: TouchEventListener;
 		/* The onMoveTangible is the function that is called when a tangible is moved in the touch zone. */
 		onMoveTangible?: TouchEventListener;
-		/* The onTouchStart is the function that is called when a touch starts in the touch zone. */
+		/* The onTouchStart is the function that is called when a finger touch starts in the touch zone. */
 		onTouchStart?: TouchEventListener;
-		/* The onTouchEnd is the function that is called when a touch ends in the touch zone. */
+		/* The onTouchMove is the function that is called when a finger touch moves in the touch zone. */
+		onTouchMove?: TouchEventListener;
+		/* The onTouchEnd is the function that is called when a finger touch ends in the touch zone. */
 		onTouchEnd?: TouchEventListener;
 	}
 
@@ -129,6 +131,8 @@
 					data.touchesMove.forEach((touch: TUIOTouch) => {
 						if (touch.profile === '2Dobj') {
 							this.handleMoveTangible(touch);
+						} else if (touch.profile === '2Dcur') {
+							this.handleFingerTouchMove(touch);
 						}
 					});
 				}
@@ -166,28 +170,87 @@
 
 		/**
 		 * Handles finger touch start events from TUIO data (2Dcur profile).
-		 * Calls the custom callback if provided, otherwise does nothing by default.
+		 * Adds the touch to the tangibles manager and calls custom callback if provided.
 		 *
 		 * @param {TUIOTouch} touch - The touch event data containing position coordinates
 		 * @private
 		 */
 		private handleFingerTouchStart(touch: TUIOTouch): void {
+			// Add finger touch to tangibles manager
+			this.tangiblesManager.addTangible(touch);
+
 			if (this.shouldCallCallback('fingerTouchStart')) {
 				this.onFingerTouchStart(touch.u, touch.v);
 			}
+			// Also notify touch zones
+			this.touchZones.forEach((zone) => {
+				if (zone.onTouchStart && this.isTouchInZone(touch, zone)) {
+					zone.onTouchStart(touch);
+				}
+			});
+		}
+
+		/**
+		 * Handles finger touch move events from TUIO data (2Dcur profile).
+		 * Updates the touch position in the tangibles manager and notifies touch zones.
+		 *
+		 * @param {TUIOTouch} touch - The touch event data containing position coordinates
+		 * @private
+		 */
+		private handleFingerTouchMove(touch: TUIOTouch): void {
+			// Update finger touch in tangibles manager
+			this.tangiblesManager.updateTangible(touch);
+
+			this.touchZones.forEach((zone) => {
+				if (zone.onTouchMove && this.isTouchInZone(touch, zone)) {
+					zone.onTouchMove(touch);
+				}
+			});
 		}
 
 		/**
 		 * Handles finger touch end events from TUIO data (2Dcur profile).
-		 * Simulates a click at the touch coordinates by default.
+		 * Removes the touch from the tangibles manager and simulates a click at the touch coordinates by default.
 		 *
 		 * @param {TUIOTouch} touch - The touch event data containing position coordinates
 		 * @private
 		 */
 		private handleFingerTouchEnd(touch: TUIOTouch): void {
+			// Remove finger touch from tangibles manager
+			this.tangiblesManager.removeTangible(touch.id);
+
 			if (this.shouldCallCallback('fingerTouchEnd')) {
 				this.onFingerTouchEnd(touch.u, touch.v);
 			}
+			// Also notify touch zones
+			this.touchZones.forEach((zone) => {
+				if (zone.onTouchEnd && this.isTouchInZone(touch, zone)) {
+					zone.onTouchEnd(touch);
+				}
+			});
+		}
+
+		/**
+		 * Checks if a touch is within a zone's bounds.
+		 * Inverts v-coordinate because TUIO uses 0 at bottom, 1 at top,
+		 * while screen coordinates use 0 at top, 1 at bottom.
+		 *
+		 * @param {TUIOTouch} touch - The touch to check
+		 * @param {TouchZone} zone - The zone to check against
+		 * @returns {boolean} True if the touch is within the zone
+		 * @private
+		 */
+		private isTouchInZone(touch: TUIOTouch, zone: TouchZone): boolean {
+			// Invert v-coordinate for TUIO system (0 at bottom, 1 at top)
+			const invertedTouchV = 1 - touch.v;
+			const invertedZoneV = 1 - zone.v;
+
+			return (
+				touch.u >= zone.u &&
+				touch.u <= zone.u + zone.normalisedWidth &&
+				invertedTouchV >= invertedZoneV &&
+				invertedTouchV <= invertedZoneV + zone.normalisedHeight
+			);
 		}
 
 		/**
@@ -212,7 +275,7 @@
 		 * @private
 		 */
 		private handleRemoveTangible(touch: TUIOTouch): void {
-			this.tangiblesManager.removeTangible(touch.classId);
+			this.tangiblesManager.removeTangible(touch.id);
 			if (this.onRemoveTangible && this.shouldCallCallback(`removeTangible-${touch.classId}`)) {
 				this.onRemoveTangible(touch);
 			}

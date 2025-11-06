@@ -12,6 +12,7 @@ export interface TouchZone {
     onRemoveTangible?: TouchEventListener;
     onMoveTangible?: TouchEventListener;
     onTouchStart?: TouchEventListener;
+    onTouchMove?: TouchEventListener;
     onTouchEnd?: TouchEventListener;
 }
 export interface TUIOHandlerConfig {
@@ -77,20 +78,39 @@ export declare class TUIOHandler {
     unregisterTouchZone(zoneId: string): void;
     /**
      * Handles finger touch start events from TUIO data (2Dcur profile).
-     * Calls the custom callback if provided, otherwise does nothing by default.
+     * Adds the touch to the tangibles manager and calls custom callback if provided.
      *
      * @param {TUIOTouch} touch - The touch event data containing position coordinates
      * @private
      */
     private handleFingerTouchStart;
     /**
+     * Handles finger touch move events from TUIO data (2Dcur profile).
+     * Updates the touch position in the tangibles manager and notifies touch zones.
+     *
+     * @param {TUIOTouch} touch - The touch event data containing position coordinates
+     * @private
+     */
+    private handleFingerTouchMove;
+    /**
      * Handles finger touch end events from TUIO data (2Dcur profile).
-     * Simulates a click at the touch coordinates by default.
+     * Removes the touch from the tangibles manager and simulates a click at the touch coordinates by default.
      *
      * @param {TUIOTouch} touch - The touch event data containing position coordinates
      * @private
      */
     private handleFingerTouchEnd;
+    /**
+     * Checks if a touch is within a zone's bounds.
+     * Inverts v-coordinate because TUIO uses 0 at bottom, 1 at top,
+     * while screen coordinates use 0 at top, 1 at bottom.
+     *
+     * @param {TUIOTouch} touch - The touch to check
+     * @param {TouchZone} zone - The zone to check against
+     * @returns {boolean} True if the touch is within the zone
+     * @private
+     */
+    private isTouchInZone;
     /**
      * Handles tangible placement events from TUIO data (2Dobj profile).
      * Adds the tangible to the tangibles manager and calls custom callback if provided.

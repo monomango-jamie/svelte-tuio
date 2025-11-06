@@ -1,8 +1,16 @@
 <script lang="ts">
 	import { setTUIOHandler } from './context';
-	import { TUIOHandler } from './TUIOHandler.svelte';
+	import { TUIOHandler, type TUIOHandlerConfig } from './TUIOHandler.svelte';
+	import type { SvelteSocket } from '@hardingjam/svelte-socket';
 
-	let { children, svelteSocket, tuioHandler = new TUIOHandler({ svelteSocket }) } = $props();
+	interface TUIOProviderProps {
+		children?: import('svelte').Snippet;
+		svelteSocket: SvelteSocket;
+		config?: Partial<Omit<TUIOHandlerConfig, 'svelteSocket'>>;
+	}
+
+	let { children, svelteSocket, config }: TUIOProviderProps = $props();
+	const tuioHandler = new TUIOHandler({ svelteSocket, ...config });
 
 	setTUIOHandler(tuioHandler);
 </script>
