@@ -101,23 +101,37 @@ Your TouchDesigner project needs to run a WebSocket server that sends TUIO event
 
 ### Using the Hook
 
+Access reactive TUIO state in your components using `$derived`:
+
 ```svelte
 <script>
 	import { useTUIO } from 'svelte-tuio';
 
 	const tuioHandler = useTUIO();
+	
+	// Access reactive state with $derived
 	let tangibles = $derived(tuioHandler.tangiblesManager.tangibles);
+	let tangibleClassIds = $derived(tuioHandler.tangiblesManager.tangibleClassIds);
 	let isConnected = $derived(tuioHandler.svelteSocket.isConnected);
+	
+	// Derived computations
+	let tangibleCount = $derived(tangibles.length);
+	let hasTangibles = $derived(tangibleCount > 0);
 </script>
 
 <div>
 	<p>Connected: {isConnected}</p>
+	<p>Active tangibles: {tangibleCount}</p>
 
-	{#each tangibles as tangible}
-		<div>
-			Tangible {tangible.classId} at ({tangible.u}, {tangible.v})
-		</div>
-	{/each}
+	{#if hasTangibles}
+		{#each tangibles as tangible (tangible.classId)}
+			<div>
+				Tangible {tangible.classId} at ({tangible.u.toFixed(2)}, {tangible.v.toFixed(2)})
+			</div>
+		{/each}
+	{:else}
+		<p>No tangibles detected</p>
+	{/if}
 </div>
 ```
 
@@ -224,9 +238,34 @@ tuioHandler.unregisterTouchZone('my-zone');
 Manages tangible objects with reactive state. All tangible operations are handled internally by `TUIOHandler`.
 
 ```typescript
-// Public Properties (read-only)
-manager.tangibles; // TUIOTouch[] ($state) - All active tangibles
-manager.tangibleClassIds; // number[] ($state) - Just the class IDs
+// Public Properties (reactive $state - use with $derived)
+manager.tangibles;        // TUIOTouch[] - All active tangibles with full data
+manager.tangibleClassIds; // number[] - Just the class IDs for performance
+```
+
+**Example: Accessing Reactive State**
+
+```svelte
+<script>
+	import { useTUIO } from 'svelte-tuio';
+	
+	const tuioHandler = useTUIO();
+	const manager = tuioHandler.tangiblesManager;
+	
+	// Use $derived to reactively access state
+	let tangibles = $derived(manager.tangibles);
+	let classIds = $derived(manager.tangibleClassIds);
+	
+	// Derived computations update automatically
+	let specificTangible = $derived(
+		tangibles.find(t => t.classId === 14)
+	);
+	let hasSpecificTangible = $derived(classIds.includes(14));
+</script>
+
+{#if specificTangible}
+	<p>Tangible 14 is at position: {specificTangible.u}, {specificTangible.v}</p>
+{/if}
 ```
 
 ### `useTUIO()`
@@ -241,11 +280,9 @@ const tuioHandler = useTUIO();
 
 The library provides optional callbacks for all TUIO events. By default:
 
-- **`handleFingerTouchEnd`** - Uses [`defaultSimulateClick`](https://github.com/monomango-jamie/svelte-tuio/blob/main/src/lib/tuio-provider/defaultSimulateClick.ts) to click HTML elements
-- **`handleFingerTouchStart`** - Does nothing (no-op)
-- **`handlePlaceTangible`** - Automatic (managed by TangiblesManager)
-- **`handleRemoveTangible`** - Automatic (managed by TangiblesManager)
-- **`handleMoveTangible`** - Automatic (managed by TangiblesManager)
+- **`onFingerTouchEnd`** - Uses [`defaultSimulateClick`](https://github.com/monomango-jamie/svelte-tuio/blob/main/src/lib/tuio-provider/defaultSimulateClick.ts) to click HTML elements
+- **`onFingerTouchStart`** - Does nothing (no-op)
+- **Tangible events** (`onPlaceTangible`, `onRemoveTangible`, `onMoveTangible`) - Automatically update TangiblesManager state, custom callbacks are called in addition to state updates
 
 **Custom Callbacks:**
 

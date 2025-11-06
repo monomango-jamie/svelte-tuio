@@ -17,18 +17,10 @@
 		public tangibles = $state<TUIOTouch[]>([]);
 		/** State tracking only the class IDs - for components that don't need position updates */
 		public tangibleClassIds = $state<number[]>([]);
-		/** Internal map for O(1) lookups by classId */
-		private tangiblesMap = new Map<number, TUIOTouch>();
+	/** Internal map for O(1) lookups by classId */
+	private tangiblesMap = new Map<number, TUIOTouch>();
 
-		/**
-		 * Retrieves the tangibles array.
-		 * @returns The tangibles array.
-		 */
-		public getTangibles(): TUIOTouch[] {
-			return this.tangibles;
-		}
-
-	/**
+/**
 	 * Creates, initializes, and executes a new tangible instance.
 	 * If the tangible already exists, it will be updated instead.
 	 * @param touch - TUIO touch data including classId, u, and v coordinates
@@ -53,11 +45,11 @@
 		this.tangibleClassIds = [...this.tangibleClassIds, touch.classId];
 	}
 
-		/**
-		 * Removes a tangible from the tangibles store with conditional animation.
-		 * @param classId - The classId of the tangible to remove.
-		 */
-		public removeTangible(classId: number): void {
+	/**
+	 * Removes a tangible from the tangibles store.
+	 * @param classId - The classId of the tangible to remove.
+	 */
+	public removeTangible(classId: number): void {
 			// If the tangible doesn't exist, return (O(1) lookup)
 			if (!this.tangiblesMap.has(classId)) {
 				return;
