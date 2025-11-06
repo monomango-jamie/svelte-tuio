@@ -17,6 +17,8 @@
 		public tangibles = $state<TUIOTouch[]>([]);
 		/** State tracking only the class IDs - for components that don't need position updates */
 		public tangibleClassIds = $state<number[]>([]);
+		/** Internal map for O(1) lookups by classId */
+		private tangiblesMap = new Map<number, TUIOTouch>();
 
 		/**
 		 * Retrieves the tangibles array.
@@ -32,16 +34,21 @@
 	 * @param touch - TUIO touch data including classId, u, and v coordinates
 	 */
 	public addTangible(touch: TUIOTouch): void {
-		// If tangible already exists, update it instead
-		if (this.tangibleClassIds.includes(touch.classId)) {
+		// If tangible already exists, update it instead (O(1) lookup)
+		if (this.tangiblesMap.has(touch.classId)) {
 			this.updateTangible(touch);
 			return;
 		}
 
-		// Create new tangible
+		// Create new reactive tangible
 		const newTangible = $state<TUIOTouch>({
 			...touch
 		});
+		
+		// Add to map for fast lookups
+		this.tangiblesMap.set(touch.classId, newTangible);
+		
+		// Add to arrays (these trigger reactivity)
 		this.tangibles = [...this.tangibles, newTangible];
 		this.tangibleClassIds = [...this.tangibleClassIds, touch.classId];
 	}
@@ -51,29 +58,38 @@
 		 * @param classId - The classId of the tangible to remove.
 		 */
 		public removeTangible(classId: number): void {
-			// If the tangible classID doesn't exist in the tangibles array, return
-			if (!this.tangibleClassIds.includes(classId)) {
+			// If the tangible doesn't exist, return (O(1) lookup)
+			if (!this.tangiblesMap.has(classId)) {
 				return;
 			}
 
+			// Remove from map
+			this.tangiblesMap.delete(classId);
+			
+			// Remove from arrays
 			this.tangibleClassIds = this.tangibleClassIds.filter((id) => id !== classId);
 			this.tangibles = this.tangibles.filter((tangible) => tangible.classId !== classId);
 		}
 
 		/**
 		 * Updates a tangible in the tangibles store.
+		 * Optimized for high-frequency updates by directly mutating the reactive object.
 		 * @param touch - TUIO touch data with updated u, v coordinates
 		 */
 		public updateTangible(touch: TUIOTouch): void {
+			// Get existing tangible (O(1) lookup)
+			const existing = this.tangiblesMap.get(touch.classId);
+			
 			// If the tangible doesn't exist, add it
-			if (!this.tangibleClassIds.includes(touch.classId)) {
+			if (!existing) {
 				this.addTangible(touch);
 				return;
 			}
-			// Otherwise, update the tangible's position
-			this.tangibles = this.tangibles.map((tangible) =>
-				tangible.classId === touch.classId ? { ...tangible, ...touch } : tangible
-			);
+			
+			// Directly mutate the reactive object instead of recreating the array
+			// This is much faster for high-frequency updates and Svelte 5's fine-grained
+			// reactivity will track individual property changes
+			Object.assign(existing, touch);
 		}
 	}
 </script>
