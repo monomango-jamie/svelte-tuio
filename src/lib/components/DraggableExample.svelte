@@ -1,105 +1,156 @@
 <script lang="ts">
-	import { draggable, type DraggableConfig } from '../directives/useDraggable.svelte';
+	import useTUIO from '../tuio-provider/useTUIO';
 
 	let isPushedUp = $state(false);
 	let isPushedDown = $state(false);
 	let isActive = $state(false);
 	let message = $state('Touch and drag me vertically!');
 	let currentDelta = $state(0);
-
+	
 	const SENSITIVITY = 0.05; // 5% of screen height
-
+	
 	// Calculate visual offset (scale delta for smooth visual feedback)
 	const visualOffset = $derived(currentDelta * 500); // Scale to pixels for visual effect
 
-	const draggableConfig: DraggableConfig = {
-		direction: 'y',
-		sensitivity: SENSITIVITY,
-		onMove: (delta: number) => {
-			currentDelta = delta;
-			isActive = true;
+	const tuioHandler = useTUIO();
+	let draggableBox = $state<HTMLDivElement | undefined>(undefined);
+	let hasRegisteredTouchZone = $state(false);
+	let initialPosition = $state<{ u: number; v: number } | null>(null);
+	let activeTouchId = $state<number | null>(null);
 
-			// Update state based on sensitivity threshold
-			if (delta >= SENSITIVITY) {
-				isPushedDown = true;
-				isPushedUp = false;
-				message = '⬇️ Threshold Exceeded - Pushed Down!';
-			} else if (delta <= -SENSITIVITY) {
-				isPushedUp = true;
-				isPushedDown = false;
-				message = '⬆️ Threshold Exceeded - Pushed Up!';
-			} else {
-				isPushedUp = false;
-				isPushedDown = false;
-				message = 'Moving... (below threshold)';
+	$effect(() => {
+		if (draggableBox && !hasRegisteredTouchZone) {
+			const rect = draggableBox.getBoundingClientRect();
+			if (rect) {
+				tuioHandler.registerTouchZone({
+					id: 'draggable-demo',
+					u: rect.left / window.innerWidth,
+					v: 1 - rect.top / window.innerHeight - rect.height / window.innerHeight, // Invert v-coordinate
+					normalisedWidth: rect.width / window.innerWidth,
+					normalisedHeight: rect.height / window.innerHeight,
+					onTouchStart: (touch) => {
+						console.log('👆 Touch started:', touch);
+						initialPosition = { u: touch.u, v: touch.v };
+						activeTouchId = touch.id;
+						isActive = true;
+					},
+					onTouchMove: (touch) => {
+						if (activeTouchId === touch.id && initialPosition) {
+							// Calculate delta in the y direction
+							const delta = touch.v - initialPosition.v;
+							currentDelta = delta;
+							
+							// Update state based on sensitivity threshold
+							if (delta >= SENSITIVITY) {
+								isPushedDown = true;
+								isPushedUp = false;
+								message = '⬇️ Threshold Exceeded - Pushed Down!';
+								console.log('🔽 onPushPositive triggered');
+							} else if (delta <= -SENSITIVITY) {
+								isPushedUp = true;
+								isPushedDown = false;
+								message = '⬆️ Threshold Exceeded - Pushed Up!';
+								console.log('🔼 onPushNegative triggered');
+							} else {
+								isPushedUp = false;
+								isPushedDown = false;
+								message = 'Moving... (below threshold)';
+							}
+						}
+					},
+					onTouchEnd: (touch) => {
+						if (activeTouchId === touch.id) {
+							console.log('👋 Touch ended');
+							isPushedUp = false;
+							isPushedDown = false;
+							isActive = false;
+							message = 'Touch and drag me vertically!';
+							currentDelta = 0;
+							initialPosition = null;
+							activeTouchId = null;
+						}
+					}
+				});
+				hasRegisteredTouchZone = true;
 			}
-		},
-		onPushPositive: () => {
-			console.log('🔽 onPushPositive triggered');
-		},
-		onPushNegative: () => {
-			console.log('🔼 onPushNegative triggered');
-		},
-		onRelease: () => {
-			console.log('👋 onRelease triggered');
-			isPushedUp = false;
-			isPushedDown = false;
-			isActive = false;
-			message = 'Touch and drag me vertically!';
-			currentDelta = 0;
 		}
-	};
+	});
 </script>
 
-<div class="container">
-	<div class="info-panel">
-		<h3>Draggable Action Demo</h3>
-		<div class="stats">
-			<div class="stat">
-				<span class="label">Status:</span>
-				<span class="value" class:active={isActive}>{isActive ? '🟢 Active' : '⚪ Idle'}</span>
+<div class="flex min-h-[600px] flex-col items-center justify-center gap-8 p-8">
+	<!-- Info Panel -->
+	<div class="min-w-[400px] rounded-2xl bg-white p-6 shadow-xl">
+		<h3 class="mb-4 text-xl font-bold text-gray-800">Draggable Touch Demo</h3>
+		<div class="grid grid-cols-2 gap-4">
+			<div class="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+				<span class="text-sm font-semibold text-gray-600">Status:</span>
+				<span class="font-mono text-base font-bold" class:text-green-600={isActive} class:text-gray-400={!isActive}>
+					{isActive ? '🟢 Active' : '⚪ Idle'}
+				</span>
 			</div>
-			<div class="stat">
-				<span class="label">Delta:</span>
-				<span class="value" class:positive={currentDelta > 0} class:negative={currentDelta < 0}>
+			<div class="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+				<span class="text-sm font-semibold text-gray-600">Delta:</span>
+				<span class="font-mono text-base font-bold" class:text-blue-600={currentDelta > 0} class:text-red-600={currentDelta < 0} class:text-gray-800={currentDelta === 0}>
 					{currentDelta.toFixed(4)}
 				</span>
 			</div>
-			<div class="stat">
-				<span class="label">Threshold:</span>
-				<span class="value">±{SENSITIVITY.toFixed(2)}</span>
+			<div class="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+				<span class="text-sm font-semibold text-gray-600">Threshold:</span>
+				<span class="font-mono text-base font-bold text-gray-800">±{SENSITIVITY.toFixed(2)}</span>
 			</div>
-			<div class="stat">
-				<span class="label">Exceeded:</span>
-				<span class="value threshold-status" class:exceeded={isPushedUp || isPushedDown}>
+			<div class="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+				<span class="text-sm font-semibold text-gray-600">Exceeded:</span>
+				<span class="font-mono text-base font-bold" class:text-green-600={isPushedUp || isPushedDown} class:text-gray-400={!isPushedUp && !isPushedDown}>
 					{isPushedUp || isPushedDown ? '✅ Yes' : '❌ No'}
 				</span>
 			</div>
 		</div>
 	</div>
 
+	<!-- Draggable Box -->
 	<div
-		class="draggable-box"
-		class:active={isActive}
-		class:pushed-up={isPushedUp}
-		class:pushed-down={isPushedDown}
+		bind:this={draggableBox}
+		class="relative min-w-[400px] cursor-grab select-none rounded-2xl p-12 text-center text-white shadow-2xl transition-all duration-150 will-change-transform"
+		class:cursor-grabbing={isActive}
+		class:shadow-[0_20px_50px_rgba(0,0,0,0.3)]={isActive}
+		class:bg-gradient-to-br={true}
+		class:from-indigo-500={!isPushedUp && !isPushedDown}
+		class:to-purple-600={!isPushedUp && !isPushedDown}
+		class:from-pink-400={isPushedUp}
+		class:to-red-500={isPushedUp}
+		class:shadow-[0_20px_50px_rgba(245,87,108,0.5)]={isPushedUp}
+		class:from-sky-400={isPushedDown}
+		class:to-cyan-400={isPushedDown}
+		class:shadow-[0_20px_50px_rgba(0,242,254,0.5)]={isPushedDown}
 		style="transform: translateY({visualOffset}px) scale({isActive ? 1.05 : 1})"
-		use:draggable={draggableConfig}
 	>
-		<h2>{message}</h2>
-		<div class="visual-indicator">
-			<div class="threshold-line top">
-				<span>Threshold ({-SENSITIVITY})</span>
+		<h2 class="mb-6 text-2xl font-bold">{message}</h2>
+		
+		<!-- Visual Indicator -->
+		<div class="relative my-8 h-[120px] border-l-2 border-r-2 border-white/30">
+			<!-- Threshold Line Top -->
+			<div class="absolute left-0 right-0 top-[10%] flex h-0.5 items-center justify-center bg-white/50">
+				<span class="rounded bg-black/30 px-2 py-1 text-xs font-semibold">Threshold ({-SENSITIVITY})</span>
 			</div>
-			<div class="center-line">
-				<span>Start (0)</span>
+			
+			<!-- Center Line -->
+			<div class="absolute left-0 right-0 top-1/2 flex h-[3px] items-center justify-center bg-white/80">
+				<span class="rounded bg-black/30 px-2 py-1 text-xs font-semibold">Start (0)</span>
 			</div>
-			<div class="threshold-line bottom">
-				<span>Threshold (+{SENSITIVITY})</span>
+			
+			<!-- Threshold Line Bottom -->
+			<div class="absolute bottom-[10%] left-0 right-0 flex h-0.5 items-center justify-center bg-white/50">
+				<span class="rounded bg-black/30 px-2 py-1 text-xs font-semibold">Threshold (+{SENSITIVITY})</span>
 			</div>
-			<div class="position-marker" style="top: {50 + (currentDelta / SENSITIVITY) * 20}%"></div>
+			
+			<!-- Position Marker -->
+			<div
+				class="absolute left-1/2 h-5 w-5 -translate-x-1/2 rounded-full border-2 border-white bg-yellow-400 shadow-lg transition-[top] duration-75 ease-out"
+				style="top: {50 + (currentDelta / SENSITIVITY) * 20}%"
+			></div>
 		</div>
-		<p class="hint">
+		
+		<p class="mt-6 text-sm font-semibold italic opacity-90">
 			{#if isPushedUp}
 				🔼 Dragging up past threshold!
 			{:else if isPushedDown}
@@ -112,186 +163,3 @@
 		</p>
 	</div>
 </div>
-
-<style>
-	.container {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		min-height: 600px;
-		padding: 2rem;
-		gap: 2rem;
-	}
-
-	.info-panel {
-		background: white;
-		border-radius: 1rem;
-		padding: 1.5rem;
-		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-		min-width: 400px;
-	}
-
-	.info-panel h3 {
-		margin: 0 0 1rem 0;
-		font-size: 1.25rem;
-		font-weight: 700;
-		color: #333;
-	}
-
-	.stats {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 1rem;
-	}
-
-	.stat {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		padding: 0.75rem;
-		background: #f8f9fa;
-		border-radius: 0.5rem;
-	}
-
-	.stat .label {
-		font-weight: 600;
-		color: #666;
-		font-size: 0.875rem;
-	}
-
-	.stat .value {
-		font-family: 'Monaco', 'Courier New', monospace;
-		font-weight: 700;
-		color: #333;
-		font-size: 1rem;
-	}
-
-	.stat .value.active {
-		color: #10b981;
-	}
-
-	.stat .value.positive {
-		color: #3b82f6;
-	}
-
-	.stat .value.negative {
-		color: #ef4444;
-	}
-
-	.stat .value.threshold-status.exceeded {
-		color: #10b981;
-	}
-
-	.draggable-box {
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-		color: white;
-		padding: 3rem 2rem;
-		border-radius: 1rem;
-		min-width: 400px;
-		text-align: center;
-		transition:
-			box-shadow 0.15s ease,
-			background 0.2s ease;
-		cursor: grab;
-		user-select: none;
-		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-		position: relative;
-		will-change: transform;
-	}
-
-	.draggable-box:active,
-	.draggable-box.active {
-		cursor: grabbing;
-		box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-	}
-
-	.draggable-box.pushed-up {
-		background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-		box-shadow: 0 20px 50px rgba(245, 87, 108, 0.5);
-	}
-
-	.draggable-box.pushed-down {
-		background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-		box-shadow: 0 20px 50px rgba(0, 242, 254, 0.5);
-	}
-
-	h2 {
-		margin: 0 0 1.5rem 0;
-		font-size: 1.5rem;
-		font-weight: 700;
-	}
-
-	.visual-indicator {
-		position: relative;
-		height: 120px;
-		margin: 2rem 0;
-		border-left: 3px solid rgba(255, 255, 255, 0.3);
-		border-right: 3px solid rgba(255, 255, 255, 0.3);
-	}
-
-	.threshold-line,
-	.center-line {
-		position: absolute;
-		left: 0;
-		right: 0;
-		height: 2px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.threshold-line {
-		background: rgba(255, 255, 255, 0.5);
-	}
-
-	.threshold-line.top {
-		top: 10%;
-	}
-
-	.threshold-line.bottom {
-		bottom: 10%;
-	}
-
-	.center-line {
-		top: 50%;
-		background: rgba(255, 255, 255, 0.8);
-		height: 3px;
-	}
-
-	.threshold-line span,
-	.center-line span {
-		background: rgba(0, 0, 0, 0.3);
-		padding: 0.25rem 0.5rem;
-		border-radius: 0.25rem;
-		font-size: 0.75rem;
-		font-weight: 600;
-	}
-
-	.position-marker {
-		position: absolute;
-		left: 50%;
-		transform: translateX(-50%);
-		width: 20px;
-		height: 20px;
-		background: #fbbf24;
-		border: 3px solid white;
-		border-radius: 50%;
-		transition: top 0.05s ease-out;
-		box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-	}
-
-	p {
-		margin: 0.5rem 0;
-		font-size: 1rem;
-		opacity: 0.9;
-	}
-
-	.hint {
-		margin-top: 1.5rem;
-		font-size: 0.875rem;
-		opacity: 0.9;
-		font-style: italic;
-		font-weight: 600;
-	}
-</style>

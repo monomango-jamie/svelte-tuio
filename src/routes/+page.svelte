@@ -3,5 +3,5 @@
 	import TangiblesDebugger from '$lib/components/TangiblesDebugger.svelte';
 </script>
 
-<TangiblesDebugger />
+<!-- <TangiblesDebugger /> -->
 <DraggableExample />
