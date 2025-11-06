@@ -36,10 +36,10 @@
 			const newTangible = $state<TUIOTouch>({
 				...touch
 			});
-			
+
 			// Add to map for fast lookups
 			this.tangiblesMap.set(touch.classId, newTangible);
-			
+
 			// Add to arrays (these trigger reactivity)
 			this.tangibles = [...this.tangibles, newTangible];
 			this.tangibleClassIds = [...this.tangibleClassIds, touch.classId];
