@@ -1,7 +1,6 @@
 <script lang="ts" module>
 	import type { TUIOEvent, TUIOTouch } from '../types/TUIO';
 	import { TangiblesManager } from '../tangible-manager/TangiblesManager.svelte';
-	import defaultSimulateClick from './defaultSimulateClick';
 	import type { SvelteSocket } from '@hardingjam/svelte-socket';
 
 	type TouchEventListener = (touch: TUIOTouch) => void;
@@ -67,7 +66,7 @@
 		constructor(config: TUIOHandlerConfig) {
 			this.tangiblesManager = new TangiblesManager();
 			this.svelteSocket = config.svelteSocket;
-			this.onFingerTouchEnd = config.onFingerTouchEnd || defaultSimulateClick;
+			this.onFingerTouchEnd = config.onFingerTouchEnd || (() => {});
 			this.onFingerTouchStart = config.onFingerTouchStart || (() => {});
 			this.onPlaceTangible = config.onPlaceTangible;
 			this.onRemoveTangible = config.onRemoveTangible;
