@@ -1,8 +1,8 @@
 import { type TUIOTouch } from '../types/TUIO';
 /**
- * Manages tangibles and touches in the UI.
- * Tangibles (2Dobj) are physical objects and touches (2Dcur) are finger touches
- * that are placed at screen co-ordinates and prompt UI responses.
+ * Manages tangibles in the UI.
+ * Tangibles (2Dobj) are physical objects that are placed at screen co-ordinates
+ * and prompt UI responses. Touch events (2Dcur) are not tracked by this manager.
  * Websocket events are emitted from touchdesigner and received by the manager.
  */
 export type TangibleNodeData = {
@@ -15,29 +15,29 @@ export type TangibleNodeData = {
     isDismounting?: boolean;
 };
 export declare class TangiblesManager {
-    /** State tracking all active tangibles and touches. */
+    /** State tracking all active tangibles (2Dobj only). */
     tangibles: TUIOTouch[];
-    /** State tracking only the class IDs of 2Dobj tangibles - for components that don't need position updates */
+    /** State tracking only the class IDs of tangibles - for components that don't need position updates */
     tangibleClassIds: number[];
-    /** Internal map for O(1) lookups by id (works for both 2Dobj and 2Dcur) */
+    /** Internal map for O(1) lookups by id (2Dobj only) */
     private tangiblesMap;
     /**
-     * Creates, initializes, and executes a new tangible/touch instance.
+     * Creates, initializes, and executes a new tangible instance.
      * If the tangible already exists, it will be updated instead.
-     * Works for both 2Dobj (tangibles) and 2Dcur (finger touches).
+     * Only works for 2Dobj (tangibles) - 2Dcur (finger touches) are ignored.
      * @param touch - TUIO touch data including id, u, and v coordinates
      */
     addTangible(touch: TUIOTouch): void;
     /**
-     * Removes a tangible/touch from the tangibles store.
-     * Works for both 2Dobj (using classId or id) and 2Dcur (using id).
-     * @param idOrClassId - The id or classId of the tangible/touch to remove.
+     * Removes a tangible from the tangibles store.
+     * Only works for 2Dobj tangibles.
+     * @param idOrClassId - The id or classId of the tangible to remove.
      */
     removeTangible(idOrClassId: number): void;
     /**
-     * Updates a tangible/touch in the tangibles store.
+     * Updates a tangible in the tangibles store.
      * Optimized for high-frequency updates by directly mutating the reactive object.
-     * Works for both 2Dobj (tangibles) and 2Dcur (finger touches).
+     * Only works for 2Dobj tangibles - 2Dcur events are filtered out.
      * @param touch - TUIO touch data with updated u, v coordinates
      */
     updateTangible(touch: TUIOTouch): void;
