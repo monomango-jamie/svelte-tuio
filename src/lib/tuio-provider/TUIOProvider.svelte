@@ -15,12 +15,15 @@
 
 	let { children, tuioHandler, svelteSocket, config }: TUIOProviderProps = $props();
 	
-	const handler = tuioHandler ?? (() => {
+	let handler: TUIOHandler;
+	if (tuioHandler) {
+		handler = tuioHandler;
+	} else {
 		if (!svelteSocket) {
 			throw new Error('TUIOProvider requires either a tuioHandler prop or a svelteSocket prop');
 		}
-		return new TUIOHandler({ svelteSocket, ...config });
-	})();
+		handler = new TUIOHandler({ svelteSocket, ...config });
+	}
 
 	setTUIOHandler(handler);
 </script>
