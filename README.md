@@ -64,9 +64,35 @@ The simplest way to use the library is with `TUIOProvider`, which automatically 
 </TUIOProvider>
 ```
 
-**Custom Handler Configuration:**
+**With Configuration:**
 
-You can also create your own `TUIOHandler` with custom callbacks and pass it to the provider:
+You can also pass configuration options directly to `TUIOProvider`:
+
+```svelte
+<script>
+	import { TUIOProvider } from 'svelte-tuio';
+	import { SvelteSocket } from '@hardingjam/svelte-socket';
+	let { children } = $props();
+
+	const svelteSocket = new SvelteSocket('ws://localhost:8080');
+</script>
+
+<TUIOProvider 
+	{svelteSocket} 
+	config={{
+		onFingerTouchEnd: (u, v) => {
+			console.log(`Touch at ${u}, ${v}`);
+		},
+		debounceTime: 100
+	}}
+>
+	{@render children?.()}
+</TUIOProvider>
+```
+
+**Pre-configured Handler:**
+
+Alternatively, you can create your own `TUIOHandler` with custom callbacks and pass it to the provider:
 
 ```svelte
 <script>
@@ -153,8 +179,27 @@ Wrapper component that sets up TUIO context for your app.
 
 **Props:**
 
-- `svelteSocket` - SvelteSocket instance from `@hardingjam/svelte-socket` (automatically creates handler)
-- `tuioHandler` - Optional pre-configured TUIOHandler instance
+- `tuioHandler` - Optional pre-configured TUIOHandler instance. If provided, `svelteSocket` and `config` are ignored.
+- `svelteSocket` - SvelteSocket instance from `@hardingjam/svelte-socket`. Required if `tuioHandler` is not provided.
+- `config` - Optional configuration object for creating a TUIOHandler. Only used if `tuioHandler` is not provided.
+
+**Usage:**
+
+You can use `TUIOProvider` in two ways:
+
+1. **Automatic handler creation** - Pass `svelteSocket` (and optionally `config`):
+   ```svelte
+   <TUIOProvider {svelteSocket} config={{ debounceTime: 100 }}>
+     <!-- Your app -->
+   </TUIOProvider>
+   ```
+
+2. **Pre-configured handler** - Create your own `TUIOHandler` and pass it:
+   ```svelte
+   <TUIOProvider {tuioHandler}>
+     <!-- Your app -->
+   </TUIOProvider>
+   ```
 
 ### `TUIOHandler`
 
