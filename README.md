@@ -228,7 +228,19 @@ const config: TUIOHandlerConfig = {
 	onMoveTangible: (touch) => {
 		/* ... */
 	},
-	debounceTime: 100 // Optional: throttle callbacks to once per 100ms
+	debounceTime: 100, // Optional: throttle callbacks to once per 100ms
+	touchZones: [ // Optional: initial touch zones to register
+		{
+			id: 'my-zone',
+			u: 0.1,
+			v: 0.1,
+			normalisedWidth: 0.3,
+			normalisedHeight: 0.3,
+			onPlaceTangible: (touch) => {
+				/* ... */
+			}
+		}
+	]
 };
 
 const handler = new TUIOHandler(config);
@@ -242,6 +254,40 @@ handler.svelteSocket; // SvelteSocket instance
 ### Touch Zones
 
 Touch zones allow you to define regions of the screen and attach callbacks for touch/tangible events within those regions. Touch zones are **user-managed** - you register zones and implement your own logic to check if touches fall within zones.
+
+You can register touch zones in two ways:
+
+**1. In the constructor:**
+
+```typescript
+import type { TouchZone, TUIOHandlerConfig } from 'svelte-tuio';
+
+const zone: TouchZone = {
+	id: 'my-zone',
+	u: 0.1, // Left edge (normalized 0-1)
+	v: 0.1, // Bottom edge (normalized 0-1)
+	normalisedWidth: 0.3,
+	normalisedHeight: 0.3,
+	onPlaceTangible: (touch) => {
+		console.log('Tangible placed in zone', touch);
+	},
+	onRemoveTangible: (touch) => {
+		console.log('Tangible removed from zone', touch);
+	},
+	onMoveTangible: (touch) => {
+		console.log('Tangible moved in zone', touch);
+	}
+};
+
+const config: TUIOHandlerConfig = {
+	svelteSocket,
+	touchZones: [zone] // Register zones at creation time
+};
+
+const handler = new TUIOHandler(config);
+```
+
+**2. Using the `registerTouchZone` method:**
 
 ```typescript
 import type { TouchZone } from 'svelte-tuio';
@@ -271,10 +317,9 @@ tuioHandler.registerTouchZone(zone);
 
 // Remove a zone when done
 tuioHandler.unregisterTouchZone('my-zone');
-
-// You must implement your own logic to check if touches are within zones
-// and call the appropriate zone callbacks
 ```
+
+**Note:** You must implement your own logic to check if touches are within zones and call the appropriate zone callbacks.
 
 **Note:** The library provides touch zone registration and storage, but you are responsible for implementing the hit detection logic and calling zone callbacks.
 

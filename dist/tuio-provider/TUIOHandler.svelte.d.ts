@@ -24,6 +24,8 @@ export interface TUIOHandlerConfig {
     onMoveTangible?: (touch: TUIOTouch) => void;
     /** Minimum time in milliseconds between callback invocations (throttling) */
     debounceTime?: number;
+    /** Initial touch zones to register */
+    touchZones?: TouchZone[];
 }
 /**
  * Manages WebSocket connections for TUIO (Tangible User Interface Objects) events.

@@ -25,3 +25,6 @@ vite.config.ts.timestamp-*
 
 # Test Files
 /src/__tests__
+
+# NPM
+.npmrc

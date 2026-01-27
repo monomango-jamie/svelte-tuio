@@ -38,6 +38,8 @@
 		onMoveTangible?: (touch: TUIOTouch) => void;
 		/** Minimum time in milliseconds between callback invocations (throttling) */
 		debounceTime?: number;
+		/** Initial touch zones to register */
+		touchZones?: TouchZone[];
 	}
 
 	/**
@@ -72,6 +74,9 @@
 			this.onRemoveTangible = config.onRemoveTangible;
 			this.onMoveTangible = config.onMoveTangible;
 			this.debounceTime = config.debounceTime || 0;
+			if (config.touchZones) {
+				this.touchZones = [...config.touchZones];
+			}
 			this.addSocketEventListeners();
 		}
 

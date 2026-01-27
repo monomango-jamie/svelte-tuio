@@ -5,14 +5,27 @@
 
 	interface TUIOProviderProps {
 		children?: import('svelte').Snippet;
-		svelteSocket: SvelteSocket;
+		/** Pre-configured TUIOHandler instance. If provided, svelteSocket and config are ignored. */
+		tuioHandler?: TUIOHandler;
+		/** SvelteSocket instance. Required if tuioHandler is not provided. */
+		svelteSocket?: SvelteSocket;
+		/** Configuration for creating a TUIOHandler. Only used if tuioHandler is not provided. */
 		config?: Partial<Omit<TUIOHandlerConfig, 'svelteSocket'>>;
 	}
 
-	let { children, svelteSocket, config }: TUIOProviderProps = $props();
-	const tuioHandler = new TUIOHandler({ svelteSocket, ...config });
+	let { children, tuioHandler, svelteSocket, config }: TUIOProviderProps = $props();
+	
+	let handler: TUIOHandler;
+	if (tuioHandler) {
+		handler = tuioHandler;
+	} else {
+		if (!svelteSocket) {
+			throw new Error('TUIOProvider requires either a tuioHandler prop or a svelteSocket prop');
+		}
+		handler = new TUIOHandler({ svelteSocket, ...config });
+	}
 
-	setTUIOHandler(tuioHandler);
+	setTUIOHandler(handler);
 </script>
 
 {@render children?.()}
