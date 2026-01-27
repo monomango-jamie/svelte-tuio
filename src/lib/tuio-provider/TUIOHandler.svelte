@@ -269,6 +269,12 @@
 			if (this.onPlaceTangible && this.shouldCallCallback(`placeTangible-${touch.classId}`)) {
 				this.onPlaceTangible(touch);
 			}
+			// Also notify touch zones
+			this.touchZones.forEach((zone) => {
+				if (zone.onPlaceTangible && this.isTouchInZone(touch, zone)) {
+					zone.onPlaceTangible(touch);
+				}
+			});
 		}
 
 		/**
@@ -283,6 +289,12 @@
 			if (this.onRemoveTangible && this.shouldCallCallback(`removeTangible-${touch.classId}`)) {
 				this.onRemoveTangible(touch);
 			}
+			// Also notify touch zones
+			this.touchZones.forEach((zone) => {
+				if (zone.onRemoveTangible && this.isTouchInZone(touch, zone)) {
+					zone.onRemoveTangible(touch);
+				}
+			});
 		}
 
 		/**
@@ -297,6 +309,12 @@
 			if (this.onMoveTangible && this.shouldCallCallback(`moveTangible-${touch.classId}`)) {
 				this.onMoveTangible(touch);
 			}
+			// Also notify touch zones
+			this.touchZones.forEach((zone) => {
+				if (zone.onMoveTangible && this.isTouchInZone(touch, zone)) {
+					zone.onMoveTangible(touch);
+				}
+			});
 		}
 	}
 </script>
