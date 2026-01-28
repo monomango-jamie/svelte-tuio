@@ -109,7 +109,13 @@
 		 */
 		private addSocketEventListeners(): void {
 			this.svelteSocket.addEventListener('message', (event: Event) => {
-				const data: TUIOEvent = JSON.parse((event as MessageEvent).data);
+				let data: TUIOEvent;
+				try {
+					data = JSON.parse((event as MessageEvent).data);
+				} catch (error) {
+					console.error('Failed to parse TUIO event:', error);
+					return;
+				}
 
 				if (data.touchesStart && data.touchesStart.length > 0) {
 					data.touchesStart.forEach((touch: TUIOTouch) => {
