@@ -1,6 +1,6 @@
 {
 	"name": "svelte-tuio",
-	"version": "0.0.19",
+	"version": "0.0.20",
 	"description": "A Svelte 5 library for handling TUIO protocol events through WebSocket connections",
 	"license": "MIT",
 	"type": "module",
@@ -70,7 +70,6 @@
 	},
 	"dependencies": {
 		"@sveltejs/package": "^2.5.4",
-		"svelte": "^5.0.0",
-		"@hardingjam/svelte-socket": "latest"
+		"@hardingjam/svelte-socket": "^0.0.7"
 	}
 }
