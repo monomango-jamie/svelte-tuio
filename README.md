@@ -83,7 +83,7 @@ You can also pass configuration options directly to `TUIOProvider`:
 		onFingerTouchEnd: (u, v) => {
 			console.log(`Touch at ${u}, ${v}`);
 		},
-		debounceTime: 100
+		throttleTime: 100
 	}}
 >
 	{@render children?.()}
@@ -189,7 +189,7 @@ You can use `TUIOProvider` in two ways:
 
 1. **Automatic handler creation** - Pass `svelteSocket` (and optionally `config`):
    ```svelte
-   <TUIOProvider {svelteSocket} config={{ debounceTime: 100 }}>
+   <TUIOProvider {svelteSocket} config={{ throttleTime: 100 }}>
      <!-- Your app -->
    </TUIOProvider>
    ```
@@ -228,7 +228,7 @@ const config: TUIOHandlerConfig = {
 	onMoveTangible: (touch) => {
 		/* ... */
 	},
-	debounceTime: 100, // Optional: throttle callbacks to once per 100ms
+	throttleTime: 100, // Throttle callbacks to once per 100ms
 	touchZones: [ // Optional: initial touch zones to register
 		{
 			id: 'my-zone',
@@ -412,12 +412,12 @@ You can provide custom callbacks for any TUIO event:
 
 ### Throttling Callbacks
 
-For performance optimization, especially with high-frequency touch events, you can throttle callback invocations using the `debounceTime` option:
+For performance optimization, especially with high-frequency touch events, you can throttle callback invocations using the `throttleTime` option:
 
 ```typescript
 const tuioHandler = new TUIOHandler({
 	svelteSocket,
-	debounceTime: 100, // Minimum 100ms between callback invocations
+	throttleTime: 100, // Minimum 100ms between callback invocations
 	onMoveTangible: (touch) => {
 		// This will only be called at most once per 100ms per tangible
 		console.log(`Tangible ${touch.classId} moved`);
@@ -427,7 +427,7 @@ const tuioHandler = new TUIOHandler({
 
 **How it works:**
 
-- `debounceTime` sets the minimum time (in milliseconds) between callback invocations
+- `throttleTime` sets the minimum time (in milliseconds) between callback invocations
 - Each callback type (fingerTouchStart, fingerTouchEnd, etc.) is throttled independently
 - For tangible callbacks, throttling is per tangible (by classId)
 - TangiblesManager state updates are NOT throttled (state always stays up-to-date)

@@ -36,8 +36,8 @@
 		onPlaceTangible?: (touch: TUIOTouch) => void;
 		onRemoveTangible?: (touch: TUIOTouch) => void;
 		onMoveTangible?: (touch: TUIOTouch) => void;
-		/** Minimum time in milliseconds between callback invocations (throttling) */
-		debounceTime?: number;
+		/** Minimum time in milliseconds between callback invocations */
+		throttleTime?: number;
 		/** Initial touch zones to register */
 		touchZones?: TouchZone[];
 	}
@@ -55,7 +55,7 @@
 		private onPlaceTangible?: (touch: TUIOTouch) => void;
 		private onRemoveTangible?: (touch: TUIOTouch) => void;
 		private onMoveTangible?: (touch: TUIOTouch) => void;
-		private debounceTime: number;
+		private throttleTime: number;
 		private lastCallTimes: Map<string, number> = new Map();
 		private messageListener: ((event: Event) => void) | null = null;
 		private openListener: (() => void) | null = null;
@@ -76,7 +76,7 @@
 			this.onPlaceTangible = config.onPlaceTangible;
 			this.onRemoveTangible = config.onRemoveTangible;
 			this.onMoveTangible = config.onMoveTangible;
-			this.debounceTime = config.debounceTime || 0;
+			this.throttleTime = config.throttleTime || 0;
 			if (config.touchZones) {
 				this.touchZones = [...config.touchZones];
 			}
@@ -90,12 +90,12 @@
 		 * @private
 		 */
 		private shouldCallCallback(key: string): boolean {
-			if (this.debounceTime === 0) return true;
+			if (this.throttleTime === 0) return true;
 
 			const now = Date.now();
 			const lastCall = this.lastCallTimes.get(key);
 
-			if (!lastCall || now - lastCall >= this.debounceTime) {
+			if (!lastCall || now - lastCall >= this.throttleTime) {
 				this.lastCallTimes.set(key, now);
 				return true;
 			}
