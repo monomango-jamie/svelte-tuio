@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import { setTUIOHandler } from './context';
 	import { TUIOHandler, type TUIOHandlerConfig } from './TUIOHandler.svelte';
 	import type { SvelteSocket } from '@hardingjam/svelte-socket';
@@ -14,8 +15,10 @@
 	}
 
 	let { children, tuioHandler, svelteSocket, config }: TUIOProviderProps = $props();
-	
+
 	let handler: TUIOHandler;
+	let ownsHandler = false;
+
 	if (tuioHandler) {
 		handler = tuioHandler;
 	} else {
@@ -23,9 +26,17 @@
 			throw new Error('TUIOProvider requires either a tuioHandler prop or a svelteSocket prop');
 		}
 		handler = new TUIOHandler({ svelteSocket, ...config });
+		ownsHandler = true;
 	}
 
 	setTUIOHandler(handler);
+
+	// Clean up the handler if we created it
+	onDestroy(() => {
+		if (ownsHandler) {
+			handler.destroy();
+		}
+	});
 </script>
 
 {@render children?.()}

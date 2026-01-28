@@ -57,6 +57,9 @@
 		private onMoveTangible?: (touch: TUIOTouch) => void;
 		private debounceTime: number;
 		private lastCallTimes: Map<string, number> = new Map();
+		private messageListener: ((event: Event) => void) | null = null;
+		private openListener: (() => void) | null = null;
+		private errorListener: ((error: Event) => void) | null = null;
 
 		/**
 		 * Creates a new TUIOHandler instance with an existing WebSocket connection.
@@ -108,7 +111,7 @@
 		 * @private
 		 */
 		private addSocketEventListeners(): void {
-			this.svelteSocket.addEventListener('message', (event: Event) => {
+			this.messageListener = (event: Event) => {
 				let data: TUIOEvent;
 				try {
 					data = JSON.parse((event as MessageEvent).data);
@@ -146,15 +149,19 @@
 						}
 					});
 				}
-			});
+			};
 
-			this.svelteSocket.addEventListener('open', () => {
+			this.openListener = () => {
 				console.log('🔌 Socket connected');
-			});
+			};
 
-			this.svelteSocket.addEventListener('error', (error) => {
+			this.errorListener = (error: Event) => {
 				console.error('🔌 Socket error:', error);
-			});
+			};
+
+			this.svelteSocket.addEventListener('message', this.messageListener);
+			this.svelteSocket.addEventListener('open', this.openListener);
+			this.svelteSocket.addEventListener('error', this.errorListener);
 
 			console.log('🔌 Socket created', this.svelteSocket);
 		}
@@ -176,6 +183,30 @@
 		 */
 		public unregisterTouchZone(zoneId: string): void {
 			this.touchZones = this.touchZones.filter((zone) => zone.id !== zoneId);
+		}
+
+		/**
+		 * Cleans up the handler by removing all event listeners and clearing state.
+		 * Call this when the handler is no longer needed to prevent memory leaks.
+		 */
+		public destroy(): void {
+			// Remove socket event listeners
+			if (this.messageListener) {
+				this.svelteSocket.removeEventListener('message', this.messageListener);
+				this.messageListener = null;
+			}
+			if (this.openListener) {
+				this.svelteSocket.removeEventListener('open', this.openListener);
+				this.openListener = null;
+			}
+			if (this.errorListener) {
+				this.svelteSocket.removeEventListener('error', this.errorListener);
+				this.errorListener = null;
+			}
+
+			// Clear state
+			this.touchZones = [];
+			this.lastCallTimes.clear();
 		}
 
 		/**
