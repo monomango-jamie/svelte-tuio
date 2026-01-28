@@ -22,7 +22,7 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-# Test Files
-/src/__tests__
+# Source (dist is published via "files" in package.json)
+/src
 
 .npmrc

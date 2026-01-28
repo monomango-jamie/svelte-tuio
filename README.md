@@ -77,8 +77,8 @@ You can also pass configuration options directly to `TUIOProvider`:
 	const svelteSocket = new SvelteSocket('ws://localhost:8080');
 </script>
 
-<TUIOProvider 
-	{svelteSocket} 
+<TUIOProvider
+	{svelteSocket}
 	config={{
 		onFingerTouchEnd: (u, v) => {
 			console.log(`Touch at ${u}, ${v}`);
@@ -188,16 +188,17 @@ Wrapper component that sets up TUIO context for your app.
 You can use `TUIOProvider` in two ways:
 
 1. **Automatic handler creation** - Pass `svelteSocket` (and optionally `config`):
+
    ```svelte
    <TUIOProvider {svelteSocket} config={{ throttleTime: 100 }}>
-     <!-- Your app -->
+   	<!-- Your app -->
    </TUIOProvider>
    ```
 
 2. **Pre-configured handler** - Create your own `TUIOHandler` and pass it:
    ```svelte
    <TUIOProvider {tuioHandler}>
-     <!-- Your app -->
+   	<!-- Your app -->
    </TUIOProvider>
    ```
 
@@ -229,7 +230,8 @@ const config: TUIOHandlerConfig = {
 		/* ... */
 	},
 	throttleTime: 100, // Throttle callbacks to once per 100ms
-	touchZones: [ // Optional: initial touch zones to register
+	touchZones: [
+		// Optional: initial touch zones to register
 		{
 			id: 'my-zone',
 			u: 0.1,
