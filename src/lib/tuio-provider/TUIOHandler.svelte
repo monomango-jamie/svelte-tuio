@@ -180,15 +180,12 @@
 
 		/**
 		 * Handles finger touch start events from TUIO data (2Dcur profile).
-		 * Adds the touch to the tangibles manager and calls custom callback if provided.
+		 * Calls custom callback if provided and notifies relevant touch zones.
 		 *
 		 * @param {TUIOTouch} touch - The touch event data containing position coordinates
 		 * @private
 		 */
 		private handleFingerTouchStart(touch: TUIOTouch): void {
-			// Add finger touch to tangibles manager
-			this.tangiblesManager.addTangible(touch);
-
 			if (this.shouldCallCallback('fingerTouchStart')) {
 				this.onFingerTouchStart(touch.u, touch.v);
 			}
@@ -202,15 +199,12 @@
 
 		/**
 		 * Handles finger touch move events from TUIO data (2Dcur profile).
-		 * Updates the touch position in the tangibles manager and notifies touch zones.
+		 * Notifies relevant touch zones of the movement.
 		 *
 		 * @param {TUIOTouch} touch - The touch event data containing position coordinates
 		 * @private
 		 */
 		private handleFingerTouchMove(touch: TUIOTouch): void {
-			// Update finger touch in tangibles manager
-			this.tangiblesManager.updateTangible(touch);
-
 			this.touchZones.forEach((zone) => {
 				if (zone.onTouchMove && this.isTouchInZone(touch, zone)) {
 					zone.onTouchMove(touch);
@@ -220,15 +214,12 @@
 
 		/**
 		 * Handles finger touch end events from TUIO data (2Dcur profile).
-		 * Removes the touch from the tangibles manager and simulates a click at the touch coordinates by default.
+		 * Calls custom callback if provided and notifies relevant touch zones.
 		 *
 		 * @param {TUIOTouch} touch - The touch event data containing position coordinates
 		 * @private
 		 */
 		private handleFingerTouchEnd(touch: TUIOTouch): void {
-			// Remove finger touch from tangibles manager
-			this.tangiblesManager.removeTangible(touch.id);
-
 			if (this.shouldCallCallback('fingerTouchEnd')) {
 				this.onFingerTouchEnd(touch.u, touch.v);
 			}
