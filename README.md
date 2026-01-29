@@ -4,11 +4,11 @@ A Svelte 5 library for handling TUIO (Tangible User Interface Objects) protocol 
 
 ## Features
 
-- 🎯 **WebSocket-based TUIO Handler** - Manages TUIO protocol events.
-- 🔄 **Reactive State** - Built with Svelte 5 runes for automatic reactivity.
-- 📦 **Tangibles Manager** - Track and manage multiple tangible objects with positions and rotations.
-- 🎨 **Debug Component** - Visual debugger with real-time updates.
-- 🪝 **Simple Hook API** - Easy context-based access via `useTUIO()`.
+- **WebSocket-based TUIO Handler** - Manages TUIO protocol events.
+- **Reactive State** - Built with Svelte 5 runes for automatic reactivity.
+- **Tangibles Manager** - Track and manage multiple tangible objects with positions and rotations.
+- **Debug Component** - Visual debugger with real-time updates.
+- **Simple Hook API** - Easy context-based access via `useTUIO()`.
 
 ## Overview
 
@@ -266,8 +266,8 @@ import type { TouchZone, TUIOHandlerConfig } from 'svelte-tuio';
 
 const zone: TouchZone = {
 	id: 'my-zone',
-	u: 0.1, // Left edge (normalized 0-1)
-	v: 0.1, // Bottom edge (normalized 0-1)
+	u: 0.1, // Horizontal position (0=left, 1=right)
+	v: 0.1, // Vertical position in TUIO coords (0=bottom, 1=top)
 	normalisedWidth: 0.3,
 	normalisedHeight: 0.3,
 	onPlaceTangible: (touch) => {
@@ -278,6 +278,15 @@ const zone: TouchZone = {
 	},
 	onMoveTangible: (touch) => {
 		console.log('Tangible moved in zone', touch);
+	},
+	onTouchStart: (touch) => {
+		console.log('Finger touch started in zone', touch);
+	},
+	onTouchMove: (touch) => {
+		console.log('Finger touch moved in zone', touch);
+	},
+	onTouchEnd: (touch) => {
+		console.log('Finger touch ended in zone', touch);
 	}
 };
 
@@ -299,8 +308,8 @@ const tuioHandler = useTUIO();
 // Define a touch zone
 const zone: TouchZone = {
 	id: 'my-zone',
-	u: 0.1, // Left edge (normalized 0-1)
-	v: 0.1, // Bottom edge (normalized 0-1)
+	u: 0.1, // Horizontal position (0=left, 1=right)
+	v: 0.1, // Vertical position in TUIO coords (0=bottom, 1=top)
 	normalisedWidth: 0.3,
 	normalisedHeight: 0.3,
 	onPlaceTangible: (touch) => {
@@ -311,6 +320,15 @@ const zone: TouchZone = {
 	},
 	onMoveTangible: (touch) => {
 		console.log('Tangible moved in zone', touch);
+	},
+	onTouchStart: (touch) => {
+		console.log('Finger touch started in zone', touch);
+	},
+	onTouchMove: (touch) => {
+		console.log('Finger touch moved in zone', touch);
+	},
+	onTouchEnd: (touch) => {
+		console.log('Finger touch ended in zone', touch);
 	}
 };
 
@@ -321,9 +339,7 @@ tuioHandler.registerTouchZone(zone);
 tuioHandler.unregisterTouchZone('my-zone');
 ```
 
-**Note:** You must implement your own logic to check if touches are within zones and call the appropriate zone callbacks.
-
-**Note:** The library provides touch zone registration and storage, but you are responsible for implementing the hit detection logic and calling zone callbacks.
+**Note:** The library automatically handles hit detection. When a touch or tangible event occurs, the handler checks if it falls within any registered zone's bounds and calls the appropriate callbacks.
 
 ### `TangiblesManager`
 
@@ -370,9 +386,25 @@ const tuioHandler = useTUIO();
 
 The library provides optional callbacks for all TUIO events. By default:
 
-- **`onFingerTouchEnd`** - Uses [`defaultSimulateClick`](https://github.com/monomango-jamie/svelte-tuio/blob/main/src/lib/tuio-provider/defaultSimulateClick.ts) to click HTML elements
+- **`onFingerTouchEnd`** - Does nothing (no-op)
 - **`onFingerTouchStart`** - Does nothing (no-op)
 - **Tangible events** (`onPlaceTangible`, `onRemoveTangible`, `onMoveTangible`) - Automatically update TangiblesManager state, custom callbacks are called in addition to state updates
+
+> **Tip:** If you want finger touches to simulate clicks on HTML elements, you can implement a click handler like this:
+>
+> ```typescript
+> const tuioHandler = new TUIOHandler({
+> 	svelteSocket,
+> 	onFingerTouchEnd: (u, v) => {
+> 		const x = u * window.innerWidth;
+> 		const y = (1 - v) * window.innerHeight; // Invert v for screen coordinates
+> 		const element = document.elementFromPoint(x, y);
+> 		if (element instanceof HTMLElement) {
+> 			element.click();
+> 		}
+> 	}
+> });
+> ```
 
 **Custom Callbacks:**
 
