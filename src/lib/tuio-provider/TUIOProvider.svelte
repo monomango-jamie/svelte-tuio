@@ -1,3 +1,22 @@
+<!--
+	@component TUIOProvider
+	Wrapper component that provides TUIO context to descendant components.
+	Creates or accepts a TUIOHandler and makes it available via Svelte context.
+	
+	@example
+	```svelte
+	<TUIOProvider {svelteSocket}>
+		<App />
+	</TUIOProvider>
+	```
+	
+	@example
+	```svelte
+	<TUIOProvider {svelteSocket} config={{ throttleTime: 100 }}>
+		<App />
+	</TUIOProvider>
+	```
+-->
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import { setTUIOHandler } from './context';

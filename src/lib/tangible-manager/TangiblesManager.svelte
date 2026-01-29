@@ -1,31 +1,48 @@
 <script lang="ts" module>
 	import { type TUIOTouch } from '$lib/types/TUIO';
+
 	/**
-	 * Manages tangibles in the UI.
-	 * Tangibles (2Dobj) are physical objects that are placed at screen co-ordinates
-	 * and prompt UI responses. Touch events (2Dcur) are not tracked by this manager.
-	 * Websocket events are emitted from touchdesigner and received by the manager.
+	 * Represents the data structure for a tangible node in the UI.
+	 * Used for tracking tangible objects with their screen positions and lifecycle state.
 	 */
 	export type TangibleNodeData = {
+		/** The TUIO touch data for the tangible */
 		tangible: TUIOTouch;
+		/** Screen position in pixels */
 		position: { x: number; y: number };
+		/** Unique identifier for the node */
 		id: string;
+		/** Whether the tangible is in the process of being removed */
 		isDismounting?: boolean;
 	};
 
+	/**
+	 * Manages tangible objects (2Dobj profile) with reactive state.
+	 * Touch events (2Dcur profile) are not tracked by this manager.
+	 *
+	 * @example
+	 * const manager = tuioHandler.tangiblesManager;
+	 * let tangibles = $derived(manager.tangibles);
+	 * let hasSpecificTangible = $derived(manager.tangibleClassIds.includes(14));
+	 */
 	export class TangiblesManager {
-		/** State tracking all active tangibles (2Dobj only). */
+		/**
+		 * Reactive array of all active tangible objects (2Dobj profile only).
+		 * Use with `$derived` for reactive access in Svelte components.
+		 */
 		public tangibles = $state<TUIOTouch[]>([]);
-		/** State tracking only the class IDs of tangibles - for components that don't need position updates */
+		/**
+		 * Reactive array of class IDs for all active tangibles.
+		 * Use for presence checks without position data.
+		 */
 		public tangibleClassIds = $state<number[]>([]);
 		/** Internal map for O(1) lookups by id (2Dobj only) */
 		private tangiblesMap = new Map<number, TUIOTouch>();
 
 		/**
-		 * Creates, initializes, and executes a new tangible instance.
-		 * If the tangible already exists, it will be updated instead.
-		 * Only works for 2Dobj (tangibles) - 2Dcur (finger touches) are ignored.
-		 * @param touch - TUIO touch data including id, u, and v coordinates
+		 * Adds a tangible to the store. Updates if it already exists.
+		 * Only processes 2Dobj profile; 2Dcur is ignored.
+		 * @param touch - TUIO touch data
 		 */
 		public addTangible(touch: TUIOTouch): void {
 			// Only add 2Dobj tangibles, not 2Dcur touches
@@ -79,10 +96,9 @@
 		}
 
 		/**
-		 * Updates a tangible in the tangibles store.
-		 * Optimized for high-frequency updates by directly mutating the reactive object.
-		 * Only works for 2Dobj tangibles - 2Dcur events are filtered out.
-		 * @param touch - TUIO touch data with updated u, v coordinates
+		 * Updates a tangible in the store. Adds if it doesn't exist.
+		 * Mutates the reactive object directly for high-frequency updates.
+		 * @param touch - TUIO touch data with updated coordinates
 		 */
 		public updateTangible(touch: TUIOTouch): void {
 			// Get existing tangible (O(1) lookup using id)

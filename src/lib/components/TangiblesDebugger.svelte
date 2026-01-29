@@ -1,3 +1,15 @@
+<!--
+	@component TangiblesDebugger
+	Displays the current state of TUIO connections, tangibles, and touch zones.
+	Must be used within a TUIOProvider context.
+	
+	@example
+	```svelte
+	<TUIOProvider {svelteSocket}>
+		<TangiblesDebugger />
+	</TUIOProvider>
+	```
+-->
 <script lang="ts">
 	import useTUIO from '$lib/tuio-provider/useTUIO';
 	const tuioHandler = useTUIO();

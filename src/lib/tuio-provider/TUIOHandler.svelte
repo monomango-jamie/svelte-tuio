@@ -5,40 +5,54 @@
 
 	type TouchEventListener = (touch: TUIOTouch) => void;
 
-	/* The touch zone is the area of the screen that is used to detect touches. */
+	/**
+	 * Defines a rectangular region on the screen for detecting touch and tangible events.
+	 * Touch zones allow you to register callbacks for events that occur within specific areas.
+	 */
 	export interface TouchZone {
-		/* The id is the name given of the touch zone. Usually the kebab-cased name of the component. */
+		/** Unique identifier for the touch zone. Usually the kebab-cased name of the component. */
 		id: string;
-		/* The u and v are the coordinates of the touch zone on the screen. */
+		/** Horizontal position of the zone's left edge (0=left, 1=right) */
 		u: number;
+		/** Vertical position in TUIO coordinates (0=bottom, 1=top) */
 		v: number;
-		/* The normalisedWidth and normalisedHeight are the width and height of the touch zone as a percentage of the screen. */
+		/** Width of the zone as a normalized value (0-1) */
 		normalisedWidth: number;
+		/** Height of the zone as a normalized value (0-1) */
 		normalisedHeight: number;
-		/* The onPlaceTangible is the function that is called when a tangible is placed on the touch zone. */
+		/** Called when a tangible object is placed within the zone */
 		onPlaceTangible?: TouchEventListener;
-		/* The onRemoveTangible is the function that is called when a tangible is removed from the touch zone. */
+		/** Called when a tangible object is removed from the zone */
 		onRemoveTangible?: TouchEventListener;
-		/* The onMoveTangible is the function that is called when a tangible is moved in the touch zone. */
+		/** Called when a tangible object moves within the zone */
 		onMoveTangible?: TouchEventListener;
-		/* The onTouchStart is the function that is called when a finger touch starts in the touch zone. */
+		/** Called when a finger touch starts within the zone */
 		onTouchStart?: TouchEventListener;
-		/* The onTouchMove is the function that is called when a finger touch moves in the touch zone. */
+		/** Called when a finger touch moves within the zone */
 		onTouchMove?: TouchEventListener;
-		/* The onTouchEnd is the function that is called when a finger touch ends in the touch zone. */
+		/** Called when a finger touch ends within the zone */
 		onTouchEnd?: TouchEventListener;
 	}
 
+	/**
+	 * Configuration options for creating a TUIOHandler instance.
+	 */
 	export interface TUIOHandlerConfig {
+		/** The SvelteSocket instance connected to the TUIO server */
 		svelteSocket: SvelteSocket;
+		/** Callback fired when a finger touch ends (2Dcur profile). Receives normalized u,v coordinates. */
 		onFingerTouchEnd?: (u: number, v: number) => void;
+		/** Callback fired when a finger touch starts (2Dcur profile). Receives normalized u,v coordinates. */
 		onFingerTouchStart?: (u: number, v: number) => void;
+		/** Callback fired when a tangible object is placed (2Dobj profile). Called after TangiblesManager update. */
 		onPlaceTangible?: (touch: TUIOTouch) => void;
+		/** Callback fired when a tangible object is removed (2Dobj profile). Called after TangiblesManager update. */
 		onRemoveTangible?: (touch: TUIOTouch) => void;
+		/** Callback fired when a tangible object moves (2Dobj profile). Called after TangiblesManager update. */
 		onMoveTangible?: (touch: TUIOTouch) => void;
-		/** Minimum time in milliseconds between callback invocations */
+		/** Minimum time in milliseconds between callback invocations. Set to 0 to disable throttling. */
 		throttleTime?: number;
-		/** Initial touch zones to register */
+		/** Initial touch zones to register when the handler is created */
 		touchZones?: TouchZone[];
 	}
 
@@ -62,9 +76,9 @@
 		private errorListener: ((error: Event) => void) | null = null;
 
 		/**
-		 * Creates a new TUIOHandler instance with an existing WebSocket connection.
+		 * Creates a TUIOHandler instance.
 		 * Sets up event listeners for messages, connection status, and errors.
-		 * Automatically handles TUIO touch events by parsing incoming JSON data.
+		 * Parses incoming JSON data and routes to appropriate handlers.
 		 *
 		 * @param {TUIOHandlerConfig} config - Configuration object with socket and optional event handlers
 		 */
@@ -104,9 +118,8 @@
 		}
 
 		/**
-		 * Attaches event listeners to the existing WebSocket connection.
+		 * Attaches event listeners to the WebSocket connection.
 		 * Sets up handlers for messages, connection status, and errors.
-		 * Automatically parses and routes TUIO events to appropriate handlers.
 		 *
 		 * @private
 		 */
@@ -167,8 +180,7 @@
 		}
 
 		/**
-		 * Registers a touch zone for tracking touch/tangible events in a specific screen region.
-		 * Touch zones are user-managed - you must implement your own hit detection logic.
+		 * Registers a touch zone. Events within the zone trigger the zone's callbacks.
 		 *
 		 * @param {TouchZone} zone - The touch zone configuration
 		 */
@@ -186,8 +198,8 @@
 		}
 
 		/**
-		 * Cleans up the handler by removing all event listeners and clearing state.
-		 * Call this when the handler is no longer needed to prevent memory leaks.
+		 * Removes all event listeners and clears state.
+		 * Call when the handler is no longer needed.
 		 */
 		public destroy(): void {
 			// Remove socket event listeners
@@ -210,10 +222,10 @@
 		}
 
 		/**
-		 * Handles finger touch start events from TUIO data (2Dcur profile).
-		 * Calls custom callback if provided and notifies relevant touch zones.
+		 * Handles finger touch start events (2Dcur profile).
+		 * Calls custom callback if provided and notifies matching touch zones.
 		 *
-		 * @param {TUIOTouch} touch - The touch event data containing position coordinates
+		 * @param {TUIOTouch} touch - The touch event data
 		 * @private
 		 */
 		private handleFingerTouchStart(touch: TUIOTouch): void {
@@ -229,10 +241,10 @@
 		}
 
 		/**
-		 * Handles finger touch move events from TUIO data (2Dcur profile).
-		 * Notifies relevant touch zones of the movement.
+		 * Handles finger touch move events (2Dcur profile).
+		 * Notifies matching touch zones.
 		 *
-		 * @param {TUIOTouch} touch - The touch event data containing position coordinates
+		 * @param {TUIOTouch} touch - The touch event data
 		 * @private
 		 */
 		private handleFingerTouchMove(touch: TUIOTouch): void {
@@ -244,10 +256,10 @@
 		}
 
 		/**
-		 * Handles finger touch end events from TUIO data (2Dcur profile).
-		 * Calls custom callback if provided and notifies relevant touch zones.
+		 * Handles finger touch end events (2Dcur profile).
+		 * Calls custom callback if provided and notifies matching touch zones.
 		 *
-		 * @param {TUIOTouch} touch - The touch event data containing position coordinates
+		 * @param {TUIOTouch} touch - The touch event data
 		 * @private
 		 */
 		private handleFingerTouchEnd(touch: TUIOTouch): void {
@@ -286,10 +298,10 @@
 		}
 
 		/**
-		 * Handles tangible placement events from TUIO data (2Dobj profile).
-		 * Adds the tangible to the tangibles manager and calls custom callback if provided.
+		 * Handles tangible placement events (2Dobj profile).
+		 * Adds to tangibles manager and calls custom callback if provided.
 		 *
-		 * @param {TUIOTouch} touch - The touch event data for the placed tangible
+		 * @param {TUIOTouch} touch - The touch event data
 		 * @private
 		 */
 		private handlePlaceTangible(touch: TUIOTouch): void {
@@ -306,10 +318,10 @@
 		}
 
 		/**
-		 * Handles tangible removal events from TUIO data (2Dobj profile).
-		 * Removes the tangible from the tangibles manager and calls custom callback if provided.
+		 * Handles tangible removal events (2Dobj profile).
+		 * Removes from tangibles manager and calls custom callback if provided.
 		 *
-		 * @param {TUIOTouch} touch - The touch event data for the removed tangible
+		 * @param {TUIOTouch} touch - The touch event data
 		 * @private
 		 */
 		private handleRemoveTangible(touch: TUIOTouch): void {
@@ -326,10 +338,10 @@
 		}
 
 		/**
-		 * Handles tangible movement events from TUIO data (2Dobj profile).
-		 * Updates the tangible's position and rotation in the tangibles manager and calls custom callback if provided.
+		 * Handles tangible movement events (2Dobj profile).
+		 * Updates tangibles manager and calls custom callback if provided.
 		 *
-		 * @param {TUIOTouch} touch - The touch event data for the moved tangible
+		 * @param {TUIOTouch} touch - The touch event data
 		 * @private
 		 */
 		private handleMoveTangible(touch: TUIOTouch): void {
