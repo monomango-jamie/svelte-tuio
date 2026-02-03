@@ -115,5 +115,33 @@
 			// reactivity will track individual property changes
 			Object.assign(existing, touch);
 		}
+
+			/**
+	 * Returns the first active tangible matching the given classId.
+	 *
+	 * ⚠️ Important for Svelte 5 reactivity:
+	 * This method should be used inside a `$derived(...)` expression.
+	 * Any properties accessed on the returned tangible (e.g. `angleX`, `u`, `v`)
+	 * will be tracked correctly by Svelte's fine-grained reactivity system.
+	 *
+	 * @param classId - The TUIO classId to search for
+	 * @returns The matching reactive TUIOTouch, or `undefined` if not present
+	 *
+	 * @example
+	 * const tangible = $derived(manager.getTangibleByClassId(16));
+	 * const rotation = $derived(tangible?.angleX ?? 0);
+	 */
+	public getTangibleByClassId(classId: number): TUIOTouch | undefined {
+		for (const tangible of this.tangiblesMap.values()) {
+			if (tangible.classId === classId) {
+				return tangible;
+			}
+		}
+		return undefined;
 	}
+
+
+	}
+
+	
 </script>
